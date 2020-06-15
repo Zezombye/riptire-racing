@@ -3,12 +3,13 @@ settings {
         "description": "Zez's Rip-Tire Racing | BETA do not copy!"
     },
     "gamemodes": {
-        "assault": {
+        "skirmish": {
             "enabledMaps": [
                 "horizonLunarColony"
             ]
         },
         "general": {
+            "heroLimit": "off",
             "roleLimit": "off"
         }
     },
@@ -22,7 +23,7 @@ settings {
     }
 }
 
-#!obfuscate
+##!obfuscate
 
 globalvar positions
 
@@ -30,8 +31,10 @@ playervar currentCheckpoint
 
 subroutine displayCredits
 
-#!define DEBUG false
+#!define BUILD_MODE false
 #!define generateRaycastChecks(positions) __script__("generateRaycastChecks.js")
+
+#!include "build.opy"
 
 def displayCredits():
     hudSubtext(getAllPlayers(), "By Zezombye#9938 on Discord", HudPosition.LEFT, 0, Color.ORANGE, HudReeval.VISIBILITY_AND_STRING, SpecVisibility.ALWAYS)
@@ -51,10 +54,10 @@ rule "init global":
         vect(15.791, 10.415, -8.202), vect(13.345, 10.291, -12.926)
     ]
     displayCredits()
+    #print(raycast(vect(-17.551, 6, -149.685), vect(-20.05, 6, -148.335), getAllPlayers(), [], true).getPlayerHit())
+    #print(raycast(vect(-17.551, 6, -149.685), vect(-20.05, 6, -148.335), getAllPlayers(), [], true).getHitPosition())
 
 
-
-    
 rule "init player":
     @Event eachPlayer
     
@@ -63,23 +66,14 @@ rule "init player":
     createIcon(eventPlayer, (positions[eventPlayer.currentCheckpoint*2]+positions[eventPlayer.currentCheckpoint*2+1])/2-vect(0,0.3,0), Icon.RADIOACTIVE, IconReeval.VISIBILITY_AND_POSITION, Color.GREEN, true)
     print("{} is at checkpoint {}".format(eventPlayer, eventPlayer.currentCheckpoint))
 
-rule "display looking position":
-    @Event eachPlayer
-    @Condition DEBUG
-    #print(raycast(eventPlayer.getEyePosition(), eventPlayer.getEyePosition()+eventPlayer.getFacingDirection()*30, [], [], true).getHitPosition())
-    createEffect(getAllPlayers(), Effect.SPHERE, Color.WHITE, raycast(eventPlayer.getEyePosition(), eventPlayer.getEyePosition()+eventPlayer.getFacingDirection()*30, [], [], true).getHitPosition(), 0.3, EffectReeval.VISIBILITY_POSITION_AND_RADIUS)
-
-rule "add to array":
-    @Event eachPlayer
-    @Condition DEBUG
-    @Condition eventPlayer.isHoldingButton(ButtonLiteral.INTERACT)
-    positions.append(raycast(eventPlayer.getEyePosition(), eventPlayer.getEyePosition()+eventPlayer.getFacingDirection()*30, [], [], true).getHitPosition())
-    createEffect(getAllPlayers(), Effect.SPHERE, Color.WHITE, raycast(eventPlayer.getEyePosition(), eventPlayer.getEyePosition()+eventPlayer.getFacingDirection()*30, [], [], true).getHitPosition(), 0.3, EffectReeval.VISIBILITY)
 
 rule "raycast check for next checkpoint":
     @Event eachPlayer
     @Condition distance(positions[eventPlayer.currentCheckpoint*2+1], raycast(positions[eventPlayer.currentCheckpoint*2], positions[eventPlayer.currentCheckpoint*2+1], eventPlayer, [], true).getHitPosition()) > 0.1
     eventPlayer.currentCheckpoint++
+
+
+
 
 rule "player wins":
     @Event eachPlayer
