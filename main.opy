@@ -18,13 +18,14 @@ settings {
     "heroes": {
         "allTeams": {
             "junkrat": {
-                "enableInfiniteUlt": true,
-                #"enableSpawningWithUlt": true,
+                "enableAbility1": false,
                 "damageDealt%": 10,
                 "damageReceived%": 10,
-                "passiveUltGen%": 500,
-                "ultGen%": 500,
-                "enableUlt": false,
+                "enableInfiniteUlt": true,
+                "enablePrimaryFire": false,
+                "enableMelee": false,
+                "enableAbility2": false,
+                "enableUlt": false
             },
             "enabledHeroes": [
                 "junkrat"
@@ -40,6 +41,8 @@ globalvar spawnPositions
 globalvar gameStatus
 
 playervar currentCheckpoint
+playervar hasLaunchedTire
+playervar hasFinished
 
 subroutine displayCredits
 
@@ -50,9 +53,9 @@ subroutine displayCredits
 #!define BUILD_MODE false
 #!define generateRaycastChecks(positions) __script__("generateRaycastChecks.js")
 
-#!define playerInSpot(nb) (sorted([p for p in getAllPlayers() if p.currentCheckpoint > 0], lambda x: -x.currentCheckpoint))
-#!define spotHudHeader(nb) hudHeader(getAllPlayers(), playerInSpot(nb), HudPosition.TOP, nb-100, Color.GREEN, HudReeval.VISIBILITY_SORT_ORDER_AND_STRING, SpecVisibility.ALWAYS)
-#!define spotHudSubtext(nb) hudSubtext(getAllPlayers(), playerInSpot(nb), HudPosition.TOP, nb-100, Color.LIME_GREEN, HudReeval.VISIBILITY_SORT_ORDER_AND_STRING, SpecVisibility.ALWAYS)
+#!define playerInSpot(nb) (sorted([p for p in getAllPlayers() if p.currentCheckpoint > 0], lambda x: -x.currentCheckpoint)[nb])
+#!define spotHudHeader(nb) hudHeader(getAllPlayers() if gameStatus == GAME_STARTED and playerInSpot(nb) != null else [], "#{} | {}".format(nb+1, playerInSpot(nb)), HudPosition.TOP, nb-100, Color.PURPLE, HudReeval.VISIBILITY_SORT_ORDER_AND_STRING, SpecVisibility.ALWAYS)
+#!define spotHudSubheader(nb) hudSubheader(getAllPlayers() if gameStatus ==  GAME_STARTED and playerInSpot(nb) != null else [], "#{} | {}".format(nb+1, playerInSpot(nb)), HudPosition.TOP, nb-100, Color.ORANGE, HudReeval.VISIBILITY_SORT_ORDER_AND_STRING, SpecVisibility.ALWAYS)
 
 #!include "build.opy"
 
@@ -81,12 +84,30 @@ rule "init global":
     #print(raycast(vect(-17.551, 6, -149.685), vect(-20.05, 6, -148.335), getAllPlayers(), [], true).getPlayerHit())
     #print(raycast(vect(-17.551, 6, -149.685), vect(-20.05, 6, -148.335), getAllPlayers(), [], true).getHitPosition())
     hudHeader(hostPlayer if gameStatus == GAME_NOT_STARTED and not BUILD_MODE else [], "Press F to start the game", HudPosition.TOP, 1, Color.SKY_BLUE, HudReeval.VISIBILITY_SORT_ORDER_AND_STRING, SpecVisibility.ALWAYS)
-    hudSubtext(getAllPlayers() if gameStatus == GAME_STARTED else [], "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n", HudPosition.TOP, 0, Color.WHITE, HudReeval.VISIBILITY_SORT_ORDER_AND_STRING, SpecVisibility.ALWAYS)
+    hudSubtext(getAllPlayers() if gameStatus != GAME_NOT_STARTED else [], " \n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n", HudPosition.TOP, 0, Color.WHITE, HudReeval.VISIBILITY_SORT_ORDER_AND_STRING, SpecVisibility.ALWAYS)
+
+    spotHudHeader(0)
+    spotHudSubheader(1)
+    spotHudSubheader(2)
+    spotHudSubheader(3)
+    spotHudSubheader(4)
+    spotHudSubheader(5)
+    spotHudSubheader(6)
+    spotHudSubheader(7)
+    spotHudSubheader(8)
+    spotHudSubheader(9)
+    spotHudSubheader(10)
+    spotHudSubheader(11)
+    spotHudSubheader(12)
 
     #debug
-    /*for I in range(6):
+    for I in range(6):
         createDummy(Hero.JUNKRAT, Team.1, -1, positions[0], vect(0,0,0))
-        createDummy(Hero.JUNKRAT, Team.2, -1, positions[0], vect(0,0,0))*/
+        createDummy(Hero.JUNKRAT, Team.2, -1, positions[0], vect(0,0,0))
+
+rule "init player":
+    @Event eachPlayer
+    chase(eventPlayer.currentCheckpoint, 9999, rate=0.0001, ChaseReeval.NONE)
 
 rule "host player starts the game":
     @Condition hostPlayer.isHoldingButton(Button.INTERACT)
@@ -96,6 +117,9 @@ rule "host player starts the game":
 rule "init player":
     @Event eachPlayer
     @Condition gameStatus == GAME_IN_SETUP
+    eventPlayer.clearStatusEffect(Status.PHASED_OUT)
+    eventPlayer.hasLaunchedTire = false
+    eventPlayer.hasFinished = false
     eventPlayer.setStatusEffect(null, Status.ROOTED, 9999)
     eventPlayer.teleport(spawnPositions[0] + directionTowards(spawnPositions[0], spawnPositions[1])*eventPlayer.getSlot()*(distance(spawnPositions[0], spawnPositions[1])/6) + (vect(0,2,0) if eventPlayer.getTeam() == Team.2 else vect(0,0,0)))
     eventPlayer.setFacing(directionTowards(eventPlayer.getEyePosition(), (positions[0]+positions[1])/2), Relativity.TO_WORLD)
@@ -107,16 +131,55 @@ rule "init player":
     createIcon(eventPlayer, (positions[eventPlayer.currentCheckpoint*2]+positions[eventPlayer.currentCheckpoint*2+1])/2-vect(0,0.3,0), Icon.RADIOACTIVE, IconReeval.VISIBILITY_AND_POSITION, Color.GREEN, true)
     print("{} is at checkpoint {}".format(eventPlayer, eventPlayer.currentCheckpoint))
 
+rule "freeze":
+    @Event eachPlayer
+    @Condition gameStatus == GAME_IN_SETUP
+    @Condition eventPlayer.isHoldingButton(Button.ULTIMATE)
+    @Condition eventPlayer.getUltCharge() < 100
+    eventPlayer.setStatusEffect(null, Status.FROZEN, 0.7)
+
+rule "setup":
+    @Condition gameStatus == GAME_IN_SETUP
+    for I in range(0, 101, 0.40):
+        getAllPlayers().setUltCharge(I)
+        wait()
+    gameStatus = GAME_STARTED
+
+rule "set ult charge when game started":
+    @Event eachPlayer
+    @Condition gameStatus == GAME_STARTED
+    @Condition not eventPlayer.hasFinished and not eventPlayer.isUsingUltimate()
+    @Condition eventPlayer.getUltCharge() < 100
+    eventPlayer.setUltCharge(100)
+
 
 rule "raycast check for next checkpoint":
     @Event eachPlayer
     @Condition distance(positions[eventPlayer.currentCheckpoint*2+1], raycast(positions[eventPlayer.currentCheckpoint*2], positions[eventPlayer.currentCheckpoint*2+1], eventPlayer, [], true).getHitPosition()) > 0.1
-    eventPlayer.currentCheckpoint++
+    eventPlayer.currentCheckpoint = round(eventPlayer.currentCheckpoint+1)
 
+rule "player launched tire":
+    @Event eachPlayer
+    @Condition gameStatus == GAME_STARTED
+    @Condition eventPlayer.isUsingUltimate()
+    eventPlayer.hasLaunchedTire = true
 
-rule "player wins":
+rule "player tire died early":
+    @Event eachPlayer
+    @Condition gameStatus == GAME_STARTED
+    @Condition eventPlayer.hasLaunchedTire
+    @Condition not eventPlayer.isUsingUltimate()
+    @Condition eventPlayer.currentCheckpoint >= 1
+
+    #Teleport to latest checkpoint
+    eventPlayer.teleport(raycast((positions[(eventPlayer.currentCheckpoint-1)*2]+positions[(eventPlayer.currentCheckpoint-1)*2+1])/2, (positions[(eventPlayer.currentCheckpoint-1)*2]+positions[(eventPlayer.currentCheckpoint-1)*2+1])/2 - vect(0,1000,0), null, null, false).getHitPosition())
+    eventPlayer.setFacing(directionTowards((positions[(eventPlayer.currentCheckpoint-1)*2]+positions[(eventPlayer.currentCheckpoint-1)*2+1])/2, (positions[(eventPlayer.currentCheckpoint)*2]+positions[(eventPlayer.currentCheckpoint)*2+1])/2), Relativity.TO_WORLD)
+
+rule "player finishes":
     @Event eachPlayer
     @Condition eventPlayer.currentCheckpoint >= len(positions)/2
-    bigMessage(getAllPlayers(), "{} wins!".format(eventPlayer))
+    #bigMessage(getAllPlayers(), "{} wins!".format(eventPlayer))
+    eventPlayer.hasFinished = true
     eventPlayer.forceButtonPress(ButtonLiteral.PRIMARY_FIRE)
+    eventPlayer.setUltCharge(0)
 

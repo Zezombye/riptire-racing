@@ -162,10 +162,10 @@ rule "determine player name":
         
 
 
-#!define winHud(str, pos, sortOrder, hudreeval) hudSubheader(getAllPlayers() if winner != null else [], str, pos, sortOrder, Color.TURQUOISE, hudreeval, SpecVisibility.ALWAYS)
+#!define winHud(str, pos, sortOrder, hudreeval) hudSubheader(getAllPlayers() if winner != null and winner.couldNameBeGuessed else [], str, pos, sortOrder, Color.GREEN, hudreeval, SpecVisibility.ALWAYS)
 
-#!define winHudLineLeft(index) winHud("{}{}{}".format(winner.hudPadding, THIN_SPACE, winner.hudLines[index]), HudPosition.LEFT, -300+(index), HudReeval.VISIBILITY_AND_STRING)
-#!define winHudLineRight(index) winHud("{}{}".format(winner.hudLines[index], winner.hudPadding), HudPosition.RIGHT, -300+(index), HudReeval.VISIBILITY_AND_STRING)
+#!define winHudLineLeft(index) winHud("{}{}{}".format(winner.hudPadding, THIN_SPACE, winner.hudLines[index]), HudPosition.LEFT, -550+(index), HudReeval.VISIBILITY_AND_STRING)
+#!define winHudLineRight(index) winHud("{}{}".format(winner.hudLines[index], winner.hudPadding), HudPosition.RIGHT, -550+(index), HudReeval.VISIBILITY_AND_STRING)
 
 rule "display win huds":
 
@@ -198,3 +198,27 @@ rule "display win huds":
     winHudLineRight(10)
     winHudLineRight(11)
     
+    winHud(" \n\n", HudPosition.RIGHT, -500, HudReeval.VISIBILITY)
+    winHud(" \n\n", HudPosition.LEFT, -500, HudReeval.VISIBILITY)
+
+    winHud("                                                 ▒▒      ▒▒  ▒▒                    ▒▒", HudPosition.LEFT, -485, HudReeval.VISIBILITY)
+    winHud("                                                 ▒▒      ▒▒  ▒▒                    ▒▒", HudPosition.LEFT, -484, HudReeval.VISIBILITY)
+    winHud("                                                 ▒▒  ▒▒  ▒▒      ▒▒▒▒▒▒    ▒▒▒▒▒▒  ▒▒", HudPosition.LEFT, -483, HudReeval.VISIBILITY)
+    winHud("                                                 ▒▒  ▒▒  ▒▒  ▒▒  ▒▒▒▒▒▒▒  ▒▒▒▒▒▒▒  ▒▒", HudPosition.LEFT, -482, HudReeval.VISIBILITY)
+    winHud("                                                 ▒▒  ▒▒  ▒▒  ▒▒  ▒▒   ▒▒  ▒▒       ▒▒", HudPosition.LEFT, -481, HudReeval.VISIBILITY)
+    winHud("                                                 ▒▒▒ ▒▒ ▒▒▒  ▒▒  ▒▒   ▒▒  ▒▒▒▒▒▒   ▒▒", HudPosition.LEFT, -480, HudReeval.VISIBILITY)
+    winHud("                                                  ▒▒ ▒▒ ▒▒   ▒▒  ▒▒   ▒▒   ▒▒▒▒▒▒  ▒▒", HudPosition.LEFT, -479, HudReeval.VISIBILITY)
+    winHud("                                                  ▒▒▒▒▒▒▒▒   ▒▒  ▒▒   ▒▒       ▒▒    ", HudPosition.LEFT, -478, HudReeval.VISIBILITY)
+    winHud("                                                  ▒▒▒▒▒▒▒▒   ▒▒  ▒▒   ▒▒  ▒▒▒▒▒▒▒  ▒▒", HudPosition.LEFT, -477, HudReeval.VISIBILITY)
+    winHud("                                                   ▒▒  ▒▒    ▒▒  ▒▒   ▒▒  ▒▒▒▒▒▒   ▒▒", HudPosition.LEFT, -476, HudReeval.VISIBILITY)
+
+    winHud("▒▒      ▒▒  ▒▒                    ▒▒                                                ", HudPosition.RIGHT, -485, HudReeval.VISIBILITY)
+    winHud("▒▒      ▒▒  ▒▒                    ▒▒                                                ", HudPosition.RIGHT, -484, HudReeval.VISIBILITY)
+    winHud("▒▒  ▒▒  ▒▒      ▒▒▒▒▒▒    ▒▒▒▒▒▒  ▒▒                                                ", HudPosition.RIGHT, -483, HudReeval.VISIBILITY)
+    winHud("▒▒  ▒▒  ▒▒  ▒▒  ▒▒▒▒▒▒▒  ▒▒▒▒▒▒▒  ▒▒                                                ", HudPosition.RIGHT, -482, HudReeval.VISIBILITY)
+    winHud("▒▒  ▒▒  ▒▒  ▒▒  ▒▒   ▒▒  ▒▒       ▒▒                                                ", HudPosition.RIGHT, -481, HudReeval.VISIBILITY)
+    winHud("▒▒▒ ▒▒ ▒▒▒  ▒▒  ▒▒   ▒▒  ▒▒▒▒▒▒   ▒▒                                                ", HudPosition.RIGHT, -480, HudReeval.VISIBILITY)
+    winHud(" ▒▒ ▒▒ ▒▒   ▒▒  ▒▒   ▒▒   ▒▒▒▒▒▒  ▒▒                                                ", HudPosition.RIGHT, -479, HudReeval.VISIBILITY)
+    winHud(" ▒▒▒▒▒▒▒▒   ▒▒  ▒▒   ▒▒       ▒▒                                                    ", HudPosition.RIGHT, -478, HudReeval.VISIBILITY)
+    winHud(" ▒▒▒▒▒▒▒▒   ▒▒  ▒▒   ▒▒  ▒▒▒▒▒▒▒  ▒▒                                                ", HudPosition.RIGHT, -477, HudReeval.VISIBILITY)
+    winHud("  ▒▒  ▒▒    ▒▒  ▒▒   ▒▒  ▒▒▒▒▒▒   ▒▒                                                ", HudPosition.RIGHT, -476, HudReeval.VISIBILITY)
