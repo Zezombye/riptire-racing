@@ -129,7 +129,7 @@ rule "init player":
     eventPlayer.setUltEnabled(true)
     createBeam(eventPlayer, Beam.GOOD, positions[eventPlayer.currentCheckpoint*2], positions[eventPlayer.currentCheckpoint*2+1], Color.GREEN, EffectReeval.VISIBILITY_POSITION_AND_RADIUS)
     createIcon(eventPlayer, (positions[eventPlayer.currentCheckpoint*2]+positions[eventPlayer.currentCheckpoint*2+1])/2-vect(0,0.3,0), Icon.RADIOACTIVE, IconReeval.VISIBILITY_AND_POSITION, Color.GREEN, true)
-    print("{} is at checkpoint {}".format(eventPlayer, eventPlayer.currentCheckpoint))
+    print("{} is using ultimate: {}".format(eventPlayer, eventPlayer.isUsingUltimate()))
 
 rule "freeze":
     @Event eachPlayer
@@ -163,6 +163,7 @@ rule "player launched tire":
     @Condition gameStatus == GAME_STARTED
     @Condition eventPlayer.isUsingUltimate()
     eventPlayer.hasLaunchedTire = true
+    eventPlayer.setStatusEffect(null, Status.PHASED_OUT, 9999)
 
 rule "player tire died early":
     @Event eachPlayer
@@ -173,7 +174,15 @@ rule "player tire died early":
 
     #Teleport to latest checkpoint
     eventPlayer.teleport(raycast((positions[(eventPlayer.currentCheckpoint-1)*2]+positions[(eventPlayer.currentCheckpoint-1)*2+1])/2, (positions[(eventPlayer.currentCheckpoint-1)*2]+positions[(eventPlayer.currentCheckpoint-1)*2+1])/2 - vect(0,1000,0), null, null, false).getHitPosition())
-    eventPlayer.setFacing(directionTowards((positions[(eventPlayer.currentCheckpoint-1)*2]+positions[(eventPlayer.currentCheckpoint-1)*2+1])/2, (positions[(eventPlayer.currentCheckpoint)*2]+positions[(eventPlayer.currentCheckpoint)*2+1])/2), Relativity.TO_WORLD)
+
+    if not eventPlayer.hasFinished:
+        wait(0.5)
+        eventPlayer.startFacing(directionTowards((positions[(eventPlayer.currentCheckpoint-1)*2]+positions[(eventPlayer.currentCheckpoint-1)*2+1])/2, (positions[(eventPlayer.currentCheckpoint)*2]+positions[(eventPlayer.currentCheckpoint)*2+1])/2), 99999, Relativity.TO_WORLD, FacingReeval.DIRECTION_AND_TURN_RATE)
+
+rule "stop facing":
+    @Event eachPlayer
+    @Condition eventPlayer.isUsingUltimate()
+    eventPlayer.stopFacing()
 
 rule "player finishes":
     @Event eachPlayer
@@ -182,4 +191,5 @@ rule "player finishes":
     eventPlayer.hasFinished = true
     eventPlayer.forceButtonPress(ButtonLiteral.PRIMARY_FIRE)
     eventPlayer.setUltCharge(0)
+    eventPlayer.clearStatusEffect(Status.ROOTED)
 
