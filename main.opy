@@ -5,7 +5,8 @@ settings {
     "gamemodes": {
         "skirmish": {
             "enabledMaps": [
-                "horizonLunarColony"
+                #"horizonLunarColony",
+                "kingsRowWinter",
             ]
         },
         "general": {
@@ -18,14 +19,18 @@ settings {
     "heroes": {
         "allTeams": {
             "junkrat": {
-                "enableAbility1": false,
+                "enableAbility1": true,
+                "ability1Cooldown%": 0,
                 "damageDealt%": 10,
                 "damageReceived%": 10,
                 "enableInfiniteUlt": true,
                 "enablePrimaryFire": false,
                 "enableMelee": false,
                 "enableAbility2": false,
-                "enableUlt": false
+                "enableUlt": true,
+                "combatUltGen%": 0,
+                "passiveUltGen%": 0,
+                "ultGen%": 10,
             },
             "enabledHeroes": [
                 "junkrat"
@@ -34,11 +39,12 @@ settings {
     }
 }
 
-#!obfuscate
+##!obfuscate
 
 globalvar positions
 globalvar spawnPositions
 globalvar gameStatus
+#globalvar winner
 
 playervar currentCheckpoint
 playervar hasLaunchedTire
@@ -50,7 +56,7 @@ subroutine displayCredits
 #!define GAME_IN_SETUP 1
 #!define GAME_STARTED 2
 
-#!define BUILD_MODE false
+#!define BUILD_MODE true
 #!define generateRaycastChecks(positions) __script__("generateRaycastChecks.js")
 
 #!define playerInSpot(nb) (sorted([p for p in getAllPlayers() if p.currentCheckpoint > 0], lambda x: -x.currentCheckpoint)[nb])
@@ -58,28 +64,17 @@ subroutine displayCredits
 #!define spotHudSubheader(nb) hudSubheader(getAllPlayers() if gameStatus ==  GAME_STARTED and playerInSpot(nb) != null else [], "#{} | {}".format(nb+1, playerInSpot(nb)), HudPosition.TOP, nb-100, Color.ORANGE, HudReeval.VISIBILITY_SORT_ORDER_AND_STRING, SpecVisibility.ALWAYS)
 
 #!include "build.opy"
+##!include "winhud.opy"
+
+#!include "maps/horizon.opy"
+#!include "maps/kings_row.opy"
 
 def displayCredits():
     hudSubtext(getAllPlayers(), "By Zezombye#9938 on Discord", HudPosition.LEFT, 0, Color.ORANGE, HudReeval.VISIBILITY_AND_STRING, SpecVisibility.ALWAYS)
 
+
+
 rule "init global":
-    positions = [
-        vect(-17.518, 5.598, -149.622), vect(-20.109, 5.598, -148.449), 
-        vect(-38.189, 6.296, -117.085), vect(-40.425, 6.304, -121.377), 
-        vect(-41.700, 8.001, -102.607), vect(-41.741, 10, -102.626), 
-        vect(-30.603, 5.098,-93.974), vect(-32.902, 5.100, -98.234),
-        vect(-8.924, 6.602,-91.725), vect(-11.391, 6.596, -87.810), 
-        vect(22.769, 12.254, -87.584), vect(22.996, 12.248, -91.409),
-        vect(86.829,14.496, -69.005), vect(87.139, 14.503, -74.395), 
-        vect(77.712, 7.448, -39.723), vect(80.589, 7.454, -44.050), 
-        vect(48.646, 12.620, -33.210), vect(44.456, 12.613, -35.939), 
-        vect(35.302, 14.295, -19.841), vect(31.374, 14.300, -22.441),
-        vect(15.763, 9.605, -8.187), vect(13.325, 9.600, -12.916),
-    ]
-    spawnPositions = [
-        vect(-23.30, 5, -161.14),
-        vect(-27.88, 5, -158.75),
-    ]
     displayCredits()
     #print(raycast(vect(-17.551, 6, -149.685), vect(-20.05, 6, -148.335), getAllPlayers(), [], true).getPlayerHit())
     #print(raycast(vect(-17.551, 6, -149.685), vect(-20.05, 6, -148.335), getAllPlayers(), [], true).getHitPosition())
@@ -100,14 +95,19 @@ rule "init global":
     spotHudSubheader(11)
     spotHudSubheader(12)
 
+    #print(winner == null)
+    #print(winner != null)
+
     #debug
-    for I in range(6):
+    /*for I in range(6):
         createDummy(Hero.JUNKRAT, Team.1, -1, positions[0], vect(0,0,0))
-        createDummy(Hero.JUNKRAT, Team.2, -1, positions[0], vect(0,0,0))
+        createDummy(Hero.JUNKRAT, Team.2, -1, positions[0], vect(0,0,0))*/
 
 rule "init player":
     @Event eachPlayer
     chase(eventPlayer.currentCheckpoint, 9999, rate=0.0001, ChaseReeval.NONE)
+    createBeam(eventPlayer if gameStatus != GAME_NOT_STARTED and not eventPlayer.hasFinished else [], Beam.GOOD, positions[eventPlayer.currentCheckpoint*2], positions[eventPlayer.currentCheckpoint*2+1], Color.GREEN, EffectReeval.VISIBILITY_POSITION_AND_RADIUS)
+    createIcon(eventPlayer if gameStatus != GAME_NOT_STARTED and not eventPlayer.hasFinished else [], (positions[eventPlayer.currentCheckpoint*2]+positions[eventPlayer.currentCheckpoint*2+1])/2-vect(0,0.3,0), Icon.RADIOACTIVE, IconReeval.VISIBILITY_AND_POSITION, Color.GREEN, true)
 
 rule "host player starts the game":
     @Condition hostPlayer.isHoldingButton(Button.INTERACT)
@@ -127,9 +127,7 @@ rule "init player":
     eventPlayer.currentCheckpoint = 0
     eventPlayer.setUltCharge(0)
     eventPlayer.setUltEnabled(true)
-    createBeam(eventPlayer, Beam.GOOD, positions[eventPlayer.currentCheckpoint*2], positions[eventPlayer.currentCheckpoint*2+1], Color.GREEN, EffectReeval.VISIBILITY_POSITION_AND_RADIUS)
-    createIcon(eventPlayer, (positions[eventPlayer.currentCheckpoint*2]+positions[eventPlayer.currentCheckpoint*2+1])/2-vect(0,0.3,0), Icon.RADIOACTIVE, IconReeval.VISIBILITY_AND_POSITION, Color.GREEN, true)
-    print("{} is using ultimate: {}".format(eventPlayer, eventPlayer.isUsingUltimate()))
+    #print("{} is using ultimate: {}".format(eventPlayer, eventPlayer.isUsingUltimate()))
 
 rule "freeze":
     @Event eachPlayer
@@ -193,3 +191,10 @@ rule "player finishes":
     eventPlayer.setUltCharge(0)
     eventPlayer.clearStatusEffect(Status.ROOTED)
 
+    /*if winner == null:
+        winner = eventPlayer
+
+        if eventPlayer.couldNameBeGuessed:
+            displayWinHuds = true
+        else:
+            bigMessage(getAllPlayers(), "{} wins!".format(eventPlayer))*/

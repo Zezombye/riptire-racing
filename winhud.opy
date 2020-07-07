@@ -1,14 +1,4 @@
-settings {
-    "gamemodes": {
-        "assault": {
-            "enabledMaps": [
-                "paris"
-            ],
-            "heroLimit": "off",
-            "enableRandomHeroes": true
-        },
-    }
-}
+#!mainFile "main.opy"
 
 #https://www.dafont.com/edition-12.font
 #https://www.dafont.com/alkhemikal.font
@@ -17,26 +7,27 @@ settings {
 #Battletags have a max of 12 letters, so to get letter[11], we need a min length of 510-11 = 499.
 #globalvar str510Bytes = "mjlkdqfslqfdmjskjsldmkfljmfqsdksfdkjmlkjlmkmjlksqmjsfdmljkfqdsmjlkdqfslqfdmjskjsldmkfljmfqsdksfdkjmlkjlmkmjlksqmjsfdmljkfqdsmjlkdqfslqfdmjskjsldmkfljmfqsdksfdkjmlkjlmkmjlksqmjsfdmljkfqdsmjlkdqfslqfdmjskjsldmkfljmfqsdksfdkjmlkjlmkmjlksqmjsfdmljkfqdsmjlkdqfslqfdmjskjsldmkfljmfqsdksfdkjmlkjlmkmjlksqmjsfdmljkfqdsmjlkdqfslqfdmjskjsldmkfljmfqsdksfdkjmlkjlmkmjlksqmjsfdmljkfqdsmjlkdqfslqfdmjskjsldmkfljmfqsdksfdkjmlkjlmkmjlksqmjsfdmljkfqdsmjlkdqfslqfdmjskjsldmkfljmfqsdkqsdfmjklqsdfmklsdfmkljfdsqjkmlqsdfqdfsfdsqdfz"
 
-globalvar str499Bytes = "mjlkdqfslqfdmjskjsldmkfljmfqsdksfdkjmlkjlmkmjlksqmjsfdmljkfqdsmjlkdqfslqfdmjskjsldmkflnmfqsdksfdkjmlkjlmkmjlksqmjsfdmljkfqdsmjlkdqfslqfdmjskjsldmkfljmfqsdksfdkjnlkjlmkmjlksqmjsfdmljkfqdsmjlkdqfslqfdmjskjsldmkfljmfqsdksfdkjmlkjlmkmjlksqmjsfdmnjkfqdsmjlkdqfslqfdmjskjsldmkfljmfqsdksfdkjmlkjlmkmjlksqmjsfdmljkfqdsmjnkdqfslqfdmjskjsldmkfljmfqsdksfdkjmlkjlmkmjlksqmjsfdmljkfqdsmjlkdqfslqfdmjskjsldmkfljmfqsdnsfdkjmlkjlmkmjlksqmjsfdmljkfqdsmjlkdqfslqfdmjskjslnmkfljmfqsdkqsdfmjklqsdfmklsdfmkljfdsqjk\nlqsdf"
+globalvar str499Bytes = p"mjlkdqfslqfdmjskjsldmkfljmfqsdksfdkjmlkjlmkmjlksqmjsfdmljkfqdsmjlkdqfslqfdmjskjsldmkflnmfqsdksfdkjmlkjlmkmjlksqmjsfdmljkfqdsmjlkdqfslqfdmjskjsldmkfljmfqsdksfdkjnlkjlmkmjlksqmjsfdmljkfqdsmjlkdqfslqfdmjskjsldmkfljmfqsdksfdkjmlkjlmkmjlksqmjsfdmnjkfqdsmjlkdqfslqfdmjskjsldmkfljmfqsdksfdkjmlkjlmkmjlksqmjsfdmljkfqdsmjnkdqfslqfdmjskjsldmkfljmfqsdksfdkjmlkjlmkmjlksqmjsfdmljkfqdsmjlkdqfslqfdmjskjsldmkfljmfqsdnsfdkjmlkjlmkmjlksqmjsfdmljkfqdsmjlkdqfslqfdmjskjslnmkfljmfqsdkqsdfmjklqsdfmklsdfmkljfdsqjk\nlqsdf"
 
 globalvar strAdditionalBytes = [
-    "",
-    "*",
-    "**",
-    "***",
-    "****",
-    "*****",
-    "******",
-    "*******",
-    "********",
-    "*********",
-    "**********",
-    "***********",
+    p"",
+    p"*",
+    p"**",
+    p"***",
+    p"****",
+    p"*****",
+    p"******",
+    p"*******",
+    p"********",
+    p"*********",
+    p"**********",
+    p"***********",
 ]
 
 #globalvar str254Bytes = "mjlkdqfslqfdmjskjsldmkfljmfqsdksfdkjmlkjlmkmjlksqmjsfdmljkfqdsmjlkdqfslqfdmjskjsldmkfljmfqsdksfdkjmlkjlmkmjlksqmjsfdmljkfqdsmjlkdqfslqfdmjskjsldmkfljmfqsdksfdkjmlkjlmkmjlksqmjsfdmljkfqdsmjlkdqfslqfdmjskjsldmkfljmfqsdksfdkjmlkjlmkmjlksqmjsfdmljkfqdsmjqsdf"
 
 globalvar winner
+globalvar displayWinHuds
 
 playervar i
 playervar j
@@ -158,11 +149,10 @@ rule "determine player name":
             wait()
 
     eventPlayer.couldNameBeGuessed = true
-    winner = eventPlayer
         
 
 
-#!define winHud(str, pos, sortOrder, hudreeval) hudSubheader(getAllPlayers() if winner != null and winner.couldNameBeGuessed else [], str, pos, sortOrder, Color.GREEN, hudreeval, SpecVisibility.ALWAYS)
+#!define winHud(str, pos, sortOrder, hudreeval) hudSubheader(getAllPlayers() if displayWinHuds else [], str, pos, sortOrder, Color.GREEN, hudreeval, SpecVisibility.ALWAYS)
 
 #!define winHudLineLeft(index) winHud("{}{}{}".format(winner.hudPadding, THIN_SPACE, winner.hudLines[index]), HudPosition.LEFT, -550+(index), HudReeval.VISIBILITY_AND_STRING)
 #!define winHudLineRight(index) winHud("{}{}".format(winner.hudLines[index], winner.hudPadding), HudPosition.RIGHT, -550+(index), HudReeval.VISIBILITY_AND_STRING)
@@ -170,7 +160,10 @@ rule "determine player name":
 rule "display win huds":
 
     winHud(b" \n\n\n\n\n\n\n\n\n", HudPosition.RIGHT, -600, HudReeval.VISIBILITY)
-    winHud(" \n\n\n\n\n\n\n\n", HudPosition.LEFT, -600, HudReeval.VISIBILITY)
+    winHud( " \n\n\n\n\n\n\n\n", HudPosition.LEFT, -600, HudReeval.VISIBILITY)
+
+    #winHud(" \n\n\n\n\n\n\n\n\n\n", HudPosition.RIGHT, -590, HudReeval.VISIBILITY)
+    #winHud(" \n\n\n\n\n\n\n\n\n\n", HudPosition.LEFT, -590, HudReeval.VISIBILITY)
 
     winHudLineLeft(0)
     winHudLineLeft(1)
