@@ -1,43 +1,4 @@
-settings {
-    "main": {
-        "description": "Zez's Rip-Tire Racing | BETA do not copy!"
-    },
-    "gamemodes": {
-        "skirmish": {
-            "enabledMaps": [
-                #"horizonLunarColony",
-                "kingsRowWinter",
-            ]
-        },
-        "general": {
-            "heroLimit": "off",
-            "roleLimit": "off",
-            "enableRandomHeroes": true,
-            "respawnTime%": 30
-        }
-    },
-    "heroes": {
-        "allTeams": {
-            "junkrat": {
-                "enableAbility1": true,
-                "ability1Cooldown%": 0,
-                "damageDealt%": 10,
-                "damageReceived%": 10,
-                "enableInfiniteUlt": true,
-                "enablePrimaryFire": false,
-                "enableMelee": false,
-                "enableAbility2": false,
-                "enableUlt": true,
-                "combatUltGen%": 0,
-                "passiveUltGen%": 0,
-                "ultGen%": 10,
-            },
-            "enabledHeroes": [
-                "junkrat"
-            ]
-        }
-    }
-}
+#!include "settings.opy"
 
 ##!obfuscate
 
@@ -56,7 +17,7 @@ subroutine displayCredits
 #!define GAME_IN_SETUP 1
 #!define GAME_STARTED 2
 
-#!define BUILD_MODE true
+#!define BUILD_MODE false
 #!define generateRaycastChecks(positions) __script__("generateRaycastChecks.js")
 
 #!define playerInSpot(nb) (sorted([p for p in getAllPlayers() if p.currentCheckpoint > 0], lambda x: -x.currentCheckpoint)[nb])
@@ -71,7 +32,6 @@ subroutine displayCredits
 
 def displayCredits():
     hudSubtext(getAllPlayers(), "By Zezombye#9938 on Discord", HudPosition.LEFT, 0, Color.ORANGE, HudReeval.VISIBILITY_AND_STRING, SpecVisibility.ALWAYS)
-
 
 
 rule "init global":
@@ -99,15 +59,20 @@ rule "init global":
     #print(winner != null)
 
     #debug
-    /*for I in range(6):
+    for I in range(6):
         createDummy(Hero.JUNKRAT, Team.1, -1, positions[0], vect(0,0,0))
-        createDummy(Hero.JUNKRAT, Team.2, -1, positions[0], vect(0,0,0))*/
+        createDummy(Hero.JUNKRAT, Team.2, -1, positions[0], vect(0,0,0))
 
 rule "init player":
     @Event eachPlayer
     chase(eventPlayer.currentCheckpoint, 9999, rate=0.0001, ChaseReeval.NONE)
+
+    #create beam+icon for current target checkpoint
     createBeam(eventPlayer if gameStatus != GAME_NOT_STARTED and not eventPlayer.hasFinished else [], Beam.GOOD, positions[eventPlayer.currentCheckpoint*2], positions[eventPlayer.currentCheckpoint*2+1], Color.GREEN, EffectReeval.VISIBILITY_POSITION_AND_RADIUS)
     createIcon(eventPlayer if gameStatus != GAME_NOT_STARTED and not eventPlayer.hasFinished else [], (positions[eventPlayer.currentCheckpoint*2]+positions[eventPlayer.currentCheckpoint*2+1])/2-vect(0,0.3,0), Icon.RADIOACTIVE, IconReeval.VISIBILITY_AND_POSITION, Color.GREEN, true)
+
+    #create beam for next checkpoint
+    createBeam(eventPlayer if gameStatus != GAME_NOT_STARTED and not eventPlayer.hasFinished else [], Beam.GOOD, positions[(eventPlayer.currentCheckpoint+1)*2], positions[(eventPlayer.currentCheckpoint+1)*2+1], Color.PURPLE, EffectReeval.VISIBILITY_POSITION_AND_RADIUS)
 
 rule "host player starts the game":
     @Condition hostPlayer.isHoldingButton(Button.INTERACT)

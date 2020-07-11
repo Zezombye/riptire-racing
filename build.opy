@@ -26,6 +26,12 @@ rule "add to array":
     positions.append(raycast(eventPlayer.getEyePosition(), eventPlayer.getEyePosition()+eventPlayer.getFacingDirection()*30, [], [], true).getHitPosition())
     createEffect(getAllPlayers(), Effect.SPHERE, Color.WHITE, raycast(eventPlayer.getEyePosition(), eventPlayer.getEyePosition()+eventPlayer.getFacingDirection()*30, [], [], true).getHitPosition(), 0.3, EffectReeval.VISIBILITY)
 
+rule "display already done positions":
+    @Condition BUILD_MODE
+    wait(1)
+    for I in range(len(positions)):
+        createEffect(getAllPlayers(), Effect.SPHERE, Color.WHITE, positions[I], 0.3, EffectReeval.VISIBILITY)
+
 rule "tp":
     @Event eachPlayer
     @Condition BUILD_MODE
