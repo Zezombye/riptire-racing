@@ -9,7 +9,6 @@ globalvar timeRemaining
 globalvar winner
 globalvar hasOnePlayerFinished = false
 globalvar displayFinalScores = false
-globalvar sortedPlayersByScore
 
 playervar currentCheckpoint
 playervar hasLaunchedTire
@@ -27,8 +26,12 @@ subroutine displayCredits
 #!define DEBUG_MODE true
 #!define generateRaycastChecks(positions) __script__("generateRaycastChecks.js")
 
-#!define playerInSpot(nb) (sorted([p for p in getAllPlayers() if p.currentCheckpoint > 0], lambda x: -x.currentCheckpoint)[nb])
-#!define playersInSpot(min, max) (sorted([p for p in getAllPlayers() if p.currentCheckpoint > 0], lambda x: -x.currentCheckpoint).slice((min), (max)-(min)))
+#!define participatingPlayers() ([p for p in getAllPlayers() if p.currentCheckpoint > 0])
+
+#!define sortedPlayersByScore() (sorted(participatingPlayers(), lambda x: -x.score))
+#!define playerInSpot(nb) (sorted(participatingPlayers(), lambda x: -x.currentCheckpoint)[nb])
+#!define playersInSpot(min, max) (sorted(participatingPlayers(), lambda x: -x.currentCheckpoint).slice((min), (max)-(min)))
+
 
 #!define spotHud(func, nb) \
 _spotHud(func, getAllPlayers().exclude(playerInSpot(nb)) if (nb) <= 2 else playerInSpot((nb)+1), nb, Color.ORANGE)\
@@ -36,9 +39,9 @@ _spotHud(func, playerInSpot(nb), nb, Color.PURPLE)
 #!define _spotHud(func, visibility, nb, color) func((visibility) if gameStatus == GAME_STARTED else [], "#{} | {}".format(nb+1, playerInSpot(nb)), HudPosition.TOP, (nb)-100, color, HudReeval.VISIBILITY_SORT_ORDER_AND_STRING, SpecVisibility.ALWAYS)
 
 #!define finishHud(nb) \
-_finishHud(getAllPlayers().exclude(sortedPlayersByScore[nb]) if displayFinalScores else getAllPlayers().exclude(playerInSpot(nb)), nb, Color.ORANGE)\
-_finishHud(sortedPlayersByScore[nb] if displayFinalScores else playerInSpot(nb), nb, Color.PURPLE)
-#!define _finishHud(visibility, nb, color) hudSubtext((visibility) if gameStatus == GAME_FINISHED else [], "{}: {}".format(sortedPlayersByScore[nb], sortedPlayersByScore[nb].score) if displayFinalScores else "{}: #{}".format(playerInSpot(nb), (nb)+1), HudPosition.TOP, (nb)-50+(), color, HudReeval.VISIBILITY_AND_STRING, SpecVisibility.ALWAYS)
+_finishHud(getAllPlayers().exclude(sortedPlayersByScore()[nb]) if displayFinalScores else getAllPlayers().exclude(playerInSpot(nb)), nb, Color.ORANGE)\
+_finishHud(sortedPlayersByScore()[nb] if displayFinalScores else playerInSpot(nb), nb, Color.PURPLE)
+#!define _finishHud(visibility, nb, color) hudSubtext((visibility) if gameStatus == GAME_FINISHED and len(participatingPlayers() > (nb)) else [], "{}: {}".format(sortedPlayersByScore()[nb], floor(sortedPlayersByScore()[nb].score)) if displayFinalScores else "{}: #{}".format(playerInSpot(nb), (nb)+1), HudPosition.TOP, -100-sortedPlayersByScore()[nb].score if displayFinalScores else (nb)-500, color, HudReeval.VISIBILITY_SORT_ORDER_AND_STRING, SpecVisibility.ALWAYS)
 
 #!include "build.opy"
 #!include "debug.opy"
@@ -71,9 +74,9 @@ rule "init global":
     spotHud(hudSubheader, 10)
     spotHud(hudSubheader, 11)*/
     
-    hudSubtext(getAllPlayers() if gameStatus == GAME_FINISHED else [], " \n\n\n\n\n\n\n\n", HudPosition.TOP, -75, Color.WHITE, HudReeval.VISIBILITY, SpecVisibility.ALWAYS)
-    hudHeader(getAllPlayers() if gameStatus == GAME_FINISHED else [], "Final Rankings" if displayFinalScores else "Place for this round", HudPosition.TOP, -74, Color.GREEN, HudReeval.VISIBILITY_AND_STRING, SpecVisibility.ALWAYS)
-    hudSubtext(getAllPlayers() if gameStatus == GAME_FINISHED else [], " \n", HudPosition.TOP, -73, Color.WHITE, HudReeval.VISIBILITY, SpecVisibility.ALWAYS)
+    hudSubtext(getAllPlayers() if gameStatus == GAME_FINISHED else [], " \n\n\n\n\n\n\n\n", HudPosition.TOP, -750, Color.WHITE, HudReeval.VISIBILITY, SpecVisibility.ALWAYS)
+    hudHeader(getAllPlayers() if gameStatus == GAME_FINISHED else [], "Final Rankings" if displayFinalScores else "Place for this round", HudPosition.TOP, -740, Color.GREEN, HudReeval.VISIBILITY_AND_STRING, SpecVisibility.ALWAYS)
+    hudSubtext(getAllPlayers() if gameStatus == GAME_FINISHED else [], " \n", HudPosition.TOP, -730, Color.WHITE, HudReeval.VISIBILITY, SpecVisibility.ALWAYS)
     finishHud(0)
     finishHud(1)
     finishHud(2)
@@ -91,7 +94,7 @@ rule "init global":
     hudSubtext(getAllPlayers() if gameStatus == GAME_FINISHED else [], " \n\n\n\n\n\n\n", HudPosition.RIGHT, -75, Color.WHITE, HudReeval.VISIBILITY, SpecVisibility.ALWAYS)
     hudText(getAllPlayers() if gameStatus == GAME_FINISHED else [], " \n\n                                           \n\n\n\n\n\n\n\n\n\n\n\n\n", "                          ", null, HudPosition.RIGHT, -50, Color.LIME_GREEN, Color.WHITE, Color.WHITE, HudReeval.VISIBILITY, SpecVisibility.ALWAYS)
 
-    hudSubtext(getAllPlayers() if winner != null else [], " \n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nGame ends in {} second{}".format(timeRemaining, "" if timeRemaining < 2 else "s"), HudPosition.TOP, 100, Color.RED, HudReeval.VISIBILITY_AND_STRING, SpecVisibility.ALWAYS)
+    hudSubtext(getAllPlayers() if hasOnePlayerFinished and not gameStatus == GAME_FINISHED else [], " \n\nGame ends in {} second{}".format(timeRemaining, "" if timeRemaining < 2 else "s"), HudPosition.TOP, -10, Color.RED, HudReeval.VISIBILITY_AND_STRING, SpecVisibility.ALWAYS)
 
 
 rule "init player":
@@ -161,6 +164,7 @@ rule "raycast check for next checkpoint":
     @Event eachPlayer
     @Condition distance(positions[eventPlayer.currentCheckpoint*2+1], raycast(positions[eventPlayer.currentCheckpoint*2], positions[eventPlayer.currentCheckpoint*2+1], eventPlayer, [], true).getHitPosition()) > 0.1
     eventPlayer.currentCheckpoint = round(eventPlayer.currentCheckpoint+1)
+    playEffect(eventPlayer, DynamicEffect.BUFF_EXPLOSION_SOUND, Color.WHITE, eventPlayer, 99999)
 
 rule "player launched tire":
     @Event eachPlayer
@@ -213,7 +217,7 @@ rule "set game to finished":
     gameStatus = GAME_FINISHED
     wait(5)
     displayFinalScores = true
-    wait(6)
+    wait(7)
     gameStatus = GAME_IN_SETUP
 
 rule "increase player scores":
@@ -224,7 +228,7 @@ rule "increase player scores":
     chase(eventPlayer.score, eventPlayer.score + floor(
         (len([p for p in getAllPlayers() if p.currentCheckpoint > 0])-(1+sorted([p for p in getAllPlayers() if p.currentCheckpoint > 0], lambda x: -x.currentCheckpoint).index(eventPlayer)))
         / (len([p for p in getAllPlayers() if p.currentCheckpoint > 0])-1)*100
-    ), duration=0.5, ChaseReeval.NONE)
+    ), duration=1.5, ChaseReeval.NONE)
 
 rule "game finished":
     @Condition gameStatus = GAME_FINISHED
