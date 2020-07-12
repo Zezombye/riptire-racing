@@ -26,7 +26,6 @@ globalvar strAdditionalBytes = [
 
 #globalvar str254Bytes = "mjlkdqfslqfdmjskjsldmkfljmfqsdksfdkjmlkjlmkmjlksqmjsfdmljkfqdsmjlkdqfslqfdmjskjsldmkfljmfqsdksfdkjmlkjlmkmjlksqmjsfdmljkfqdsmjlkdqfslqfdmjskjsldmkfljmfqsdksfdkjmlkjlmkmjlksqmjsfdmljkfqdsmjlkdqfslqfdmjskjsldmkfljmfqsdksfdkjmlkjlmkmjlksqmjsfdmljkfqdsmjqsdf"
 
-globalvar winner
 globalvar displayWinHuds
 
 playervar i
@@ -215,3 +214,4 @@ rule "display win huds":
     winHud(" ▒▒▒▒▒▒▒▒   ▒▒  ▒▒   ▒▒       ▒▒                                                    ", HudPosition.RIGHT, -478, HudReeval.VISIBILITY)
     winHud(" ▒▒▒▒▒▒▒▒   ▒▒  ▒▒   ▒▒  ▒▒▒▒▒▒▒  ▒▒                                                ", HudPosition.RIGHT, -477, HudReeval.VISIBILITY)
     winHud("  ▒▒  ▒▒    ▒▒  ▒▒   ▒▒  ▒▒▒▒▒▒   ▒▒                                                ", HudPosition.RIGHT, -476, HudReeval.VISIBILITY)
+    
