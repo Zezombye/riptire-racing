@@ -4,6 +4,10 @@ settings {
     "main": {
         "description": "Zez's Rip-Tire Racing | BETA do not copy!"
     },
+    "lobby": {
+        "mapRotation": "afterGame",
+        "returnToLobby": "never"
+    },
     "gamemodes": {
         "skirmish": {
             "enabledMaps": [

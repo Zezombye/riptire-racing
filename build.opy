@@ -18,6 +18,7 @@ rule "display looking position":
     print("Looking position: {} (+{})".format(raycast(eventPlayer.getEyePosition(), eventPlayer.getEyePosition()+eventPlayer.getFacingDirection()*30, [], [], true).getHitPosition(), (raycast(eventPlayer.getEyePosition(), eventPlayer.getEyePosition()+eventPlayer.getFacingDirection()*30, [], [], true).getHitPosition()-eventPlayer.getPosition()).y))
     createEffect(getAllPlayers(), Effect.SPHERE, Color.WHITE, raycast(eventPlayer.getEyePosition(), eventPlayer.getEyePosition()+eventPlayer.getFacingDirection()*30, [], [], true).getHitPosition(), 0.3, EffectReeval.VISIBILITY_POSITION_AND_RADIUS)
     print("Position of {}: {}".format(eventPlayer, eventPlayer.getPosition()))
+    print("Facing Direction of {}: {}".format(eventPlayer, eventPlayer.getFacingDirection()))
 
 rule "add to array":
     @Event eachPlayer

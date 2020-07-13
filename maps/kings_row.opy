@@ -33,3 +33,5 @@ rule "kings row":
         vect(1.05, -1.11, -71.33),
         vect(7.26, -1.11, -70.14)
     ]
+    winPosition = vect(-17.68, 76.38, -45.47)
+    winFacing = vect(-0.78, -0.07, -0.63)
