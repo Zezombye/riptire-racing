@@ -20,4 +20,6 @@ rule "horizon":
         vect(-23.30, 5, -161.14),
         vect(-27.88, 5, -158.75),
     ]
+    winPosition = vect(-39.76, 8, 18.14)
+    winFacing = vect(0.88, 0.02, -0.47)
     

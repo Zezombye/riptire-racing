@@ -1,17 +1,20 @@
 #!include "settings.opy"
 
-#!obfuscate
+##!obfuscate
 
 globalvar positions
 globalvar spawnPositions
 globalvar gameStatus
 globalvar timeRemaining
 globalvar winner
-globalvar currentRound = 3
+globalvar currentRound
 globalvar hasOnePlayerFinished = false
 globalvar displayFinalScores = false
 globalvar countdown
 globalvar hasCountdownBeenEngaged
+
+globalvar winPosition
+globalvar winFacing
 
 globalvar countdownHuds = [
 #1
@@ -52,8 +55,8 @@ subroutine displayCredits
 #!define GAME_STARTED 2
 #!define GAME_FINISHED 3
 
-#!define BUILD_MODE true
-#!define DEBUG_MODE false
+#!define BUILD_MODE false
+#!define DEBUG_MODE true
 #!define generateRaycastChecks(positions) __script__("generateRaycastChecks.js")
 
 #!define participatingPlayers() ([p for p in getAllPlayers() if p.currentCheckpoint > 0])
@@ -87,6 +90,7 @@ rule "init global":
     #print(raycast(vect(-17.551, 6, -149.685), vect(-20.05, 6, -148.335), getAllPlayers(), [], true).getPlayerHit())
     #print(raycast(vect(-17.551, 6, -149.685), vect(-20.05, 6, -148.335), getAllPlayers(), [], true).getHitPosition())
     hudHeader(hostPlayer if gameStatus == GAME_NOT_STARTED and not BUILD_MODE else [], "Press F to start the game", HudPosition.TOP, 1, Color.SKY_BLUE, HudReeval.VISIBILITY_SORT_ORDER_AND_STRING, SpecVisibility.ALWAYS)
+    hudHeader(getAllPlayers().exclude(hostPlayer) if gameStatus == GAME_NOT_STARTED and not BUILD_MODE else [], "Waiting for host to start", HudPosition.TOP, 1, Color.SKY_BLUE, HudReeval.VISIBILITY_SORT_ORDER_AND_STRING, SpecVisibility.ALWAYS)
 
     #hide objective description
     hudSubtext(getAllPlayers() if gameStatus != GAME_NOT_STARTED else [], " \n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n", HudPosition.TOP, 0, Color.WHITE, HudReeval.VISIBILITY_SORT_ORDER_AND_STRING, SpecVisibility.ALWAYS)
@@ -111,7 +115,7 @@ rule "init global":
 rule "init huds for game end":
     
     hudSubtext(getAllPlayers() if gameStatus == GAME_FINISHED else [], " \n\n\n\n\n\n\n\n", HudPosition.TOP, -750, Color.WHITE, HudReeval.VISIBILITY, SpecVisibility.ALWAYS)
-    hudHeader(getAllPlayers() if gameStatus == GAME_FINISHED else [], "Final Rankings" if displayFinalScores else "Place for this round", HudPosition.TOP, -740, Color.GREEN, HudReeval.VISIBILITY_AND_STRING, SpecVisibility.ALWAYS)
+    hudHeader(getAllPlayers() if gameStatus == GAME_FINISHED else [], "Final Rankings" if displayFinalScores else "Place for this round", HudPosition.TOP, -740, Color.SKY_BLUE, HudReeval.VISIBILITY_AND_STRING, SpecVisibility.ALWAYS)
     hudSubtext(getAllPlayers() if gameStatus == GAME_FINISHED else [], " \n", HudPosition.TOP, -730, Color.WHITE, HudReeval.VISIBILITY, SpecVisibility.ALWAYS)
     finishHud(0)
     finishHud(1)
@@ -128,10 +132,10 @@ rule "init huds for game end":
 
     #black background for finish huds
     hudSubtext(getAllPlayers() if gameStatus == GAME_FINISHED else [], " \n\n\n\n\n\n\n", HudPosition.RIGHT, -75, Color.WHITE, HudReeval.VISIBILITY, SpecVisibility.ALWAYS)
-    hudText(getAllPlayers() if gameStatus == GAME_FINISHED else [], " \n\n                                           \n\n\n\n\n\n\n\n\n\n\n\n\n", "                          ", null, HudPosition.RIGHT, -50, Color.LIME_GREEN, Color.WHITE, Color.WHITE, HudReeval.VISIBILITY, SpecVisibility.ALWAYS)
+    hudText(getAllPlayers() if gameStatus == GAME_FINISHED else [], " \n\n                                           \n\n\n\n\n\n\n\n\n\n\n\n\n", "                          ", null, HudPosition.RIGHT, -50, Color.BLUE, Color.WHITE, Color.WHITE, HudReeval.VISIBILITY, SpecVisibility.ALWAYS)
 
     #remaining time hud
-    hudSubtext(getAllPlayers() if timeRemaining > 0 and gameStatus == GAME_STARTED else [], " \n\nGame ends in {} second{}".format(ceil(timeRemaining), "" if timeRemaining <= 1 else "s"), HudPosition.TOP, -10, Color.RED, HudReeval.VISIBILITY_AND_STRING, SpecVisibility.ALWAYS)
+    hudSubtext(getAllPlayers() if timeRemaining > 0 and timeRemaining <= 5 and gameStatus == GAME_STARTED else [], " \n\n\n\n\n\nGame ends in {} second{}".format(ceil(timeRemaining), "" if timeRemaining <= 1 else "s"), HudPosition.TOP, -10, Color.RED, HudReeval.VISIBILITY_AND_STRING, SpecVisibility.ALWAYS)
 
 
 rule "init player":
@@ -152,6 +156,12 @@ rule "init player":
         eventPlayer.setAbility1Enabled(false)
         eventPlayer.setAbility2Enabled(false)
         eventPlayer.setUltEnabled(false)
+
+rule "player died in setup":
+    @Event playerDied
+    @Condition gameStatus == GAME_NOT_STARTED
+    wait(3, Wait.ABORT_WHEN_FALSE)
+    eventPlayer.respawn()
 
 rule "host player starts the game":
     @Condition hostPlayer.isHoldingButton(Button.INTERACT)
@@ -178,12 +188,6 @@ rule "init player - setup":
     wait(0.25)
     eventPlayer.stopForcingPosition()
 
-rule "freeze":
-    @Event eachPlayer
-    @Condition gameStatus == GAME_IN_SETUP
-    @Condition eventPlayer.isHoldingButton(Button.ULTIMATE)
-    eventPlayer.setStatusEffect(null, Status.FROZEN, 0.7)
-
 rule "setup":
     @Condition gameStatus == GAME_IN_SETUP
     bigMessage(getAllPlayers(), "Round {}/3".format(currentRound+1))
@@ -208,23 +212,32 @@ rule "countdown is 1":
     @Condition countdown > 0.5 and countdown <= 1
     playEffect(getAllPlayers(), DynamicEffect.RING_EXPLOSION_SOUND, Color.WHITE, (spawnPositions[0]+spawnPositions[1])/2, 200)
 
+rule "countdown almost 0 - re-enable ult to account for lag":
+    @Condition countdown > 0 and countdown < 0.3
+    getAllPlayers().allowButton(Button.ULTIMATE)
+
 rule "countdown is 0 - start game":
     @Condition hasCountdownBeenEngaged
     @Condition countdown <= 0
     playEffect(getAllPlayers(), DynamicEffect.BUFF_EXPLOSION_SOUND, Color.WHITE, (spawnPositions[0]+spawnPositions[1])/2, 200)
-    getAllPlayers().allowButton(Button.ULTIMATE)
     gameStatus = GAME_STARTED
     wait(1)
     stopChasingVariable(countdown)
 
-rule "quick start":
+rule "turbo boost":
     @Event eachPlayer
     @Condition eventPlayer.isUsingUltimate()
-    @Condition countdown < 0 and countdown >= -0.15
+    @Condition countdown < 0 and countdown >= -0.1
     bigMessage(eventPlayer, "Turbo Boost!")
     eventPlayer.setMoveSpeed(150)
     wait(3.5)
     eventPlayer.setMoveSpeed(100)
+
+rule "freeze if pressing ult early":
+    @Event eachPlayer
+    @Condition gameStatus == GAME_IN_SETUP
+    @Condition eventPlayer.isHoldingButton(Button.ULTIMATE)
+    eventPlayer.setStatusEffect(null, Status.FROZEN, 0.7)
 
 rule "set ult charge when game started":
     @Event eachPlayer
@@ -245,6 +258,7 @@ rule "kill players joining mid-game":
 
 rule "raycast check for next checkpoint":
     @Event eachPlayer
+    @Condition gameStatus == GAME_STARTED
     @Condition distance(positions[eventPlayer.currentCheckpoint*2+1], raycast(positions[eventPlayer.currentCheckpoint*2], positions[eventPlayer.currentCheckpoint*2+1], eventPlayer, [], true).getHitPosition()) > 0.1
     eventPlayer.currentCheckpoint = round(eventPlayer.currentCheckpoint+1)
     playEffect(eventPlayer, DynamicEffect.BUFF_EXPLOSION_SOUND, Color.WHITE, eventPlayer, 99999)
@@ -292,7 +306,7 @@ rule "player has finished":
     if not hasOnePlayerFinished:
         bigMessage(getAllPlayers(), "{} wins this round!".format(eventPlayer))
         hasOnePlayerFinished = true
-        timeRemaining = 5
+        timeRemaining = 7.5
         chase(timeRemaining, 0, rate=1, ChaseReeval.NONE)
 
         /*if eventPlayer.couldNameBeGuessed:
@@ -315,12 +329,23 @@ rule "set game to finished":
         currentRound++
     else:
         winner = sortedPlayersByScore()[0]
+        hudSubtext(getAllPlayers(), " \n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n", HudPosition.TOP, -9999, Color.WHITE, HudReeval.VISIBILITY, SpecVisibility.ALWAYS)
+        hudSubtext(getAllPlayers(), " \n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n", HudPosition.LEFT, -400, Color.WHITE, HudReeval.VISIBILITY, SpecVisibility.ALWAYS)
+        hudSubtext(getAllPlayers(), " \n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n", HudPosition.RIGHT, -400, Color.WHITE, HudReeval.VISIBILITY, SpecVisibility.ALWAYS)
         if winner.couldNameBeGuessed:
             displayWinHuds = true
         else:
             bigMessage(getAllPlayers(), "{} wins!".format(winner))
-        setSlowMotion(33)
-        wait(3)
+        #setSlowMotion(33)
+        winner.startForcingPosition(winPosition, false)
+        winner.setFacing(winFacing, Relativity.TO_WORLD)
+        getAllPlayers().setStatusEffect(null, Status.ROOTED, 9999)
+        getAllPlayers().setCamera(winPosition+winFacing*5, winner.getEyePosition(), 0)
+        wait()
+        winner.stopForcingPosition()
+        winner.communicate(Comms.EMOTE_UP)
+        winner.communicate(Comms.VOICE_LINE_UP)
+        wait(10)
         setMatchTime(0)
 
 

@@ -151,7 +151,7 @@ rule "determine player name":
         
 
 
-#!define winHud(str, pos, sortOrder, hudreeval) hudSubheader(getAllPlayers() if displayWinHuds else [], str, pos, sortOrder, Color.PURPLE, hudreeval, SpecVisibility.ALWAYS)
+#!define winHud(str, pos, sortOrder, hudreeval) hudSubheader(getAllPlayers() if displayWinHuds else [], str, pos, sortOrder, Color.GREEN, hudreeval, SpecVisibility.ALWAYS)
 
 #!define winHudLineLeft(index) winHud("{}{}{}".format(winner.hudPadding, THIN_SPACE, winner.hudLines[index]), HudPosition.LEFT, -550+(index), HudReeval.VISIBILITY_AND_STRING)
 #!define winHudLineRight(index) winHud("{}{}".format(winner.hudLines[index], winner.hudPadding), HudPosition.RIGHT, -550+(index), HudReeval.VISIBILITY_AND_STRING)
