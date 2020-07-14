@@ -68,12 +68,12 @@ subroutine displayCredits
 #!define spotHud(func, nb) \
 _spotHud(func, getAllPlayers().exclude(playerInSpot(nb)) if (nb) <= 2 else playerInSpot((nb)+1), nb, Color.ORANGE)\
 _spotHud(func, playerInSpot(nb), nb, Color.PURPLE)
-#!define _spotHud(func, visibility, nb, color) func((visibility) if gameStatus == GAME_STARTED else [], "#{} | {}".format(nb+1, playerInSpot(nb)), HudPosition.TOP, (nb)-100, color, HudReeval.VISIBILITY_SORT_ORDER_AND_STRING, SpecVisibility.ALWAYS)
+#!define _spotHud(func, visibility, nb, color) func((visibility) if gameStatus == GAME_STARTED else [], "#{} | {}".format(nb+1, playerInSpot(nb)), HudPosition.TOP, (nb)-100, color, HudReeval.VISIBILITY_SORT_ORDER_AND_STRING, SpecVisibility.DEFAULT)
 
 #!define finishHud(nb) \
 _finishHud(getAllPlayers().exclude(sortedPlayersByScore()[nb]) if displayFinalScores else getAllPlayers().exclude(playerInSpot(nb)), nb, Color.ORANGE)\
 _finishHud(sortedPlayersByScore()[nb] if displayFinalScores else playerInSpot(nb), nb, Color.PURPLE)
-#!define _finishHud(visibility, nb, color) hudSubtext((visibility) if gameStatus == GAME_FINISHED and len(participatingPlayers()) > (nb) else [], "{}: {}".format(sortedPlayersByScore()[nb], floor(sortedPlayersByScore()[nb].score)) if displayFinalScores else "{}: #{}".format(playerInSpot(nb), (nb)+1), HudPosition.TOP, -100-sortedPlayersByScore()[nb].score if displayFinalScores else (nb)-500, color, HudReeval.VISIBILITY_SORT_ORDER_AND_STRING, SpecVisibility.ALWAYS)
+#!define _finishHud(visibility, nb, color) hudSubtext((visibility) if gameStatus == GAME_FINISHED and len(participatingPlayers()) > (nb) else [], "{}: {}".format(sortedPlayersByScore()[nb], floor(sortedPlayersByScore()[nb].score)) if displayFinalScores else "{}: #{}".format(playerInSpot(nb), (nb)+1), HudPosition.TOP, -100-sortedPlayersByScore()[nb].score if displayFinalScores else (nb)-500, color, HudReeval.VISIBILITY_SORT_ORDER_AND_STRING, SpecVisibility.DEFAULT)
 
 #!include "build.opy"
 #!include "debug.opy"
@@ -83,17 +83,17 @@ _finishHud(sortedPlayersByScore()[nb] if displayFinalScores else playerInSpot(nb
 #!include "maps/kings_row.opy"
 
 def displayCredits():
-    hudSubtext(getAllPlayers(), "By Zezombye#9938 on Discord", HudPosition.LEFT, 0, Color.YELLOW, HudReeval.VISIBILITY_AND_STRING, SpecVisibility.ALWAYS)
+    hudSubtext(getAllPlayers(), "By Zezombye#9938 on Discord", HudPosition.LEFT, 0, Color.YELLOW, HudReeval.VISIBILITY_AND_STRING, SpecVisibility.DEFAULT)
 
 rule "init global":
     displayCredits()
     #print(raycast(vect(-17.551, 6, -149.685), vect(-20.05, 6, -148.335), getAllPlayers(), [], true).getPlayerHit())
     #print(raycast(vect(-17.551, 6, -149.685), vect(-20.05, 6, -148.335), getAllPlayers(), [], true).getHitPosition())
-    hudHeader(hostPlayer if gameStatus == GAME_NOT_STARTED and not BUILD_MODE else [], "Press F to start the game", HudPosition.TOP, 1, Color.SKY_BLUE, HudReeval.VISIBILITY_SORT_ORDER_AND_STRING, SpecVisibility.ALWAYS)
-    hudHeader(getAllPlayers().exclude(hostPlayer) if gameStatus == GAME_NOT_STARTED and not BUILD_MODE else [], "Waiting for host to start", HudPosition.TOP, 1, Color.SKY_BLUE, HudReeval.VISIBILITY_SORT_ORDER_AND_STRING, SpecVisibility.ALWAYS)
+    hudHeader(hostPlayer if gameStatus == GAME_NOT_STARTED and not BUILD_MODE else [], "Press F to start the game", HudPosition.TOP, 1, Color.SKY_BLUE, HudReeval.VISIBILITY_SORT_ORDER_AND_STRING, SpecVisibility.DEFAULT)
+    hudHeader(getAllPlayers().exclude(hostPlayer) if gameStatus == GAME_NOT_STARTED and not BUILD_MODE else [], "Waiting for host to start", HudPosition.TOP, 1, Color.SKY_BLUE, HudReeval.VISIBILITY_SORT_ORDER_AND_STRING, SpecVisibility.DEFAULT)
 
     #hide objective description
-    hudSubtext(getAllPlayers() if gameStatus != GAME_NOT_STARTED else [], " \n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n", HudPosition.TOP, 0, Color.WHITE, HudReeval.VISIBILITY_SORT_ORDER_AND_STRING, SpecVisibility.ALWAYS)
+    hudSubtext(getAllPlayers() if gameStatus != GAME_NOT_STARTED else [], " \n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n", HudPosition.TOP, 0, Color.WHITE, HudReeval.VISIBILITY_SORT_ORDER_AND_STRING, SpecVisibility.DEFAULT)
 
     spotHud(hudHeader, 0)
     spotHud(hudSubtext, 1)
@@ -109,14 +109,14 @@ rule "init global":
     spotHud(hudSubheader, 11)
     
     #countdown hud
-    hudSubtext(getAllPlayers() if countdown > 0 else [], " \n\n\n\n\n\n", HudPosition.TOP, -20, Color.RED, HudReeval.VISIBILITY, SpecVisibility.ALWAYS)
-    hudHeader(getAllPlayers() if countdown > 0 else [], countdownHuds[floor(countdown)], HudPosition.TOP, -10, Color.RED, HudReeval.VISIBILITY_AND_STRING, SpecVisibility.ALWAYS)
+    hudSubtext(getAllPlayers() if countdown > 0 else [], " \n\n\n\n\n\n", HudPosition.TOP, -20, Color.RED, HudReeval.VISIBILITY, SpecVisibility.DEFAULT)
+    hudHeader(getAllPlayers() if countdown > 0 else [], countdownHuds[floor(countdown)], HudPosition.TOP, -10, Color.RED, HudReeval.VISIBILITY_AND_STRING, SpecVisibility.DEFAULT)
 
 rule "init huds for game end":
     
-    hudSubtext(getAllPlayers() if gameStatus == GAME_FINISHED else [], " \n\n\n\n\n\n\n\n", HudPosition.TOP, -750, Color.WHITE, HudReeval.VISIBILITY, SpecVisibility.ALWAYS)
-    hudHeader(getAllPlayers() if gameStatus == GAME_FINISHED else [], "Final Rankings" if displayFinalScores else "Place for this round", HudPosition.TOP, -740, Color.SKY_BLUE, HudReeval.VISIBILITY_AND_STRING, SpecVisibility.ALWAYS)
-    hudSubtext(getAllPlayers() if gameStatus == GAME_FINISHED else [], " \n", HudPosition.TOP, -730, Color.WHITE, HudReeval.VISIBILITY, SpecVisibility.ALWAYS)
+    hudSubtext(getAllPlayers() if gameStatus == GAME_FINISHED else [], " \n\n\n\n\n\n\n\n", HudPosition.TOP, -750, Color.WHITE, HudReeval.VISIBILITY, SpecVisibility.DEFAULT)
+    hudHeader(getAllPlayers() if gameStatus == GAME_FINISHED else [], "Final Rankings" if displayFinalScores else "Place for this round", HudPosition.TOP, -740, Color.SKY_BLUE, HudReeval.VISIBILITY_AND_STRING, SpecVisibility.DEFAULT)
+    hudSubtext(getAllPlayers() if gameStatus == GAME_FINISHED else [], " \n", HudPosition.TOP, -730, Color.WHITE, HudReeval.VISIBILITY, SpecVisibility.DEFAULT)
     finishHud(0)
     finishHud(1)
     finishHud(2)
@@ -131,11 +131,11 @@ rule "init huds for game end":
     finishHud(11)
 
     #black background for finish huds
-    hudSubtext(getAllPlayers() if gameStatus == GAME_FINISHED else [], " \n\n\n\n\n\n\n", HudPosition.RIGHT, -75, Color.WHITE, HudReeval.VISIBILITY, SpecVisibility.ALWAYS)
-    hudText(getAllPlayers() if gameStatus == GAME_FINISHED else [], " \n\n                                           \n\n\n\n\n\n\n\n\n\n\n\n\n", "                          ", null, HudPosition.RIGHT, -50, Color.BLUE, Color.WHITE, Color.WHITE, HudReeval.VISIBILITY, SpecVisibility.ALWAYS)
+    hudSubtext(getAllPlayers() if gameStatus == GAME_FINISHED else [], " \n\n\n\n\n\n\n", HudPosition.RIGHT, -75, Color.WHITE, HudReeval.VISIBILITY, SpecVisibility.DEFAULT)
+    hudText(getAllPlayers() if gameStatus == GAME_FINISHED else [], " \n\n                                           \n\n\n\n\n\n\n\n\n\n\n\n\n", "                          ", null, HudPosition.RIGHT, -50, Color.BLUE, Color.WHITE, Color.WHITE, HudReeval.VISIBILITY, SpecVisibility.DEFAULT)
 
     #remaining time hud
-    hudSubtext(getAllPlayers() if timeRemaining > 0 and timeRemaining <= 5 and gameStatus == GAME_STARTED else [], " \n\n\n\n\n\nGame ends in {} second{}".format(ceil(timeRemaining), "" if timeRemaining <= 1 else "s"), HudPosition.TOP, -10, Color.RED, HudReeval.VISIBILITY_AND_STRING, SpecVisibility.ALWAYS)
+    hudSubtext(getAllPlayers() if timeRemaining > 0 and timeRemaining <= 5 and gameStatus == GAME_STARTED else [], " \n\n\n\n\n\nGame ends in {} second{}".format(ceil(timeRemaining), "" if timeRemaining <= 1 else "s"), HudPosition.TOP, -10, Color.RED, HudReeval.VISIBILITY_AND_STRING, SpecVisibility.DEFAULT)
 
 
 rule "init player":
@@ -329,9 +329,9 @@ rule "set game to finished":
         currentRound++
     else:
         winner = sortedPlayersByScore()[0]
-        hudSubtext(getAllPlayers(), " \n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n", HudPosition.TOP, -9999, Color.WHITE, HudReeval.VISIBILITY, SpecVisibility.ALWAYS)
-        hudSubtext(getAllPlayers(), " \n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n", HudPosition.LEFT, -400, Color.WHITE, HudReeval.VISIBILITY, SpecVisibility.ALWAYS)
-        hudSubtext(getAllPlayers(), " \n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n", HudPosition.RIGHT, -400, Color.WHITE, HudReeval.VISIBILITY, SpecVisibility.ALWAYS)
+        hudSubtext(getAllPlayers(), " \n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n", HudPosition.TOP, -9999, Color.WHITE, HudReeval.VISIBILITY, SpecVisibility.DEFAULT)
+        hudSubtext(getAllPlayers(), " \n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n", HudPosition.LEFT, -400, Color.WHITE, HudReeval.VISIBILITY, SpecVisibility.DEFAULT)
+        hudSubtext(getAllPlayers(), " \n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n", HudPosition.RIGHT, -400, Color.WHITE, HudReeval.VISIBILITY, SpecVisibility.DEFAULT)
         if winner.couldNameBeGuessed:
             displayWinHuds = true
         else:
