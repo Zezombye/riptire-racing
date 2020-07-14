@@ -12,7 +12,8 @@ settings {
         "skirmish": {
             "enabledMaps": [
                 "horizonLunarColony",
-                #"kingsRowWinter",
+                "kingsRow",
+                "kingsRowWinter",
             ]
         },
         "general": {

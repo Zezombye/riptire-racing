@@ -56,7 +56,7 @@ subroutine displayCredits
 #!define GAME_FINISHED 3
 
 #!define BUILD_MODE false
-#!define DEBUG_MODE true
+#!define DEBUG_MODE false
 #!define generateRaycastChecks(positions) __script__("generateRaycastChecks.js")
 
 #!define participatingPlayers() ([p for p in getAllPlayers() if p.currentCheckpoint > 0])
@@ -229,7 +229,7 @@ rule "turbo boost":
     @Condition eventPlayer.isUsingUltimate()
     @Condition countdown < 0 and countdown >= -0.1
     bigMessage(eventPlayer, "Turbo Boost!")
-    eventPlayer.setMoveSpeed(150)
+    eventPlayer.setMoveSpeed(110)
     wait(3.5)
     eventPlayer.setMoveSpeed(100)
 
