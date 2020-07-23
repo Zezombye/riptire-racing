@@ -1,6 +1,6 @@
 #!include "settings.opy"
 
-##!obfuscate
+#!obfuscate
 
 globalvar positions
 globalvar spawnPositions
@@ -59,6 +59,10 @@ subroutine displayCredits
 #!define DEBUG_MODE false
 #!define generateRaycastChecks(positions) __script__("generateRaycastChecks.js")
 
+globalvar NB_ROUNDS = 4
+#The time remaining has a 2.5 delay.
+globalvar TIME_REMAINING_ON_FINISH = 5
+
 #!define participatingPlayers() ([p for p in getAllPlayers() if p.currentCheckpoint > 0])
 
 #!define sortedPlayersByScore() (sorted(participatingPlayers(), lambda x: -x.score))
@@ -81,6 +85,10 @@ _finishHud(sortedPlayersByScore()[nb] if displayFinalScores else playerInSpot(nb
 
 #!include "maps/horizon.opy"
 #!include "maps/kings_row.opy"
+
+rule "":
+    winner = hostPlayer
+    displayWinHuds = true
 
 def displayCredits():
     hudSubtext(getAllPlayers(), "By Zezombye#9938 on Discord", HudPosition.LEFT, 0, Color.YELLOW, HudReeval.VISIBILITY_AND_STRING, SpecVisibility.DEFAULT)
@@ -135,7 +143,7 @@ rule "init huds for game end":
     hudText(getAllPlayers() if gameStatus == GAME_FINISHED else [], " \n\n                                           \n\n\n\n\n\n\n\n\n\n\n\n\n", "                          ", null, HudPosition.RIGHT, -50, Color.BLUE, Color.WHITE, Color.WHITE, HudReeval.VISIBILITY, SpecVisibility.DEFAULT)
 
     #remaining time hud
-    hudSubtext(getAllPlayers() if timeRemaining > 0 and timeRemaining <= 5 and gameStatus == GAME_STARTED else [], " \n\n\n\n\n\nGame ends in {} second{}".format(ceil(timeRemaining), "" if timeRemaining <= 1 else "s"), HudPosition.TOP, -10, Color.RED, HudReeval.VISIBILITY_AND_STRING, SpecVisibility.DEFAULT)
+    hudSubtext(getAllPlayers() if timeRemaining > 0 and timeRemaining <= TIME_REMAINING_ON_FINISH and gameStatus == GAME_STARTED else [], " \n\n\n\n\n\nGame ends in {} second{}".format(ceil(timeRemaining), "" if timeRemaining <= 1 else "s"), HudPosition.TOP, -10, Color.RED, HudReeval.VISIBILITY_AND_STRING, SpecVisibility.DEFAULT)
 
 
 rule "init player":
@@ -306,7 +314,7 @@ rule "player has finished":
     if not hasOnePlayerFinished:
         bigMessage(getAllPlayers(), "{} wins this round!".format(eventPlayer))
         hasOnePlayerFinished = true
-        timeRemaining = 7.5
+        timeRemaining = TIME_REMAINING_ON_FINISH+2.5
         chase(timeRemaining, 0, rate=1, ChaseReeval.NONE)
 
         /*if eventPlayer.couldNameBeGuessed:
@@ -324,7 +332,7 @@ rule "set game to finished":
     wait(5)
     displayFinalScores = true
     wait(7)
-    if currentRound < 2:
+    if currentRound < (NB_ROUNDS-1):
         gameStatus = GAME_IN_SETUP
         currentRound++
     else:
@@ -341,6 +349,7 @@ rule "set game to finished":
         winner.setFacing(winFacing, Relativity.TO_WORLD)
         getAllPlayers().setStatusEffect(null, Status.ROOTED, 9999)
         getAllPlayers().setCamera(winPosition+winFacing*5, winner.getEyePosition(), 0)
+        getAllPlayers().clearStatusEffect(Status.KNOCKED_DOWN)
         wait()
         winner.stopForcingPosition()
         winner.communicate(Comms.EMOTE_UP)
