@@ -2,7 +2,7 @@
 
 settings {
     "main": {
-        "description": "Zez's Rip-Tire Racing | BETA do not copy!"
+        "description": "Zez's Rip-Tire Racing | https://discord.io/zezombye | BETA version but still playable :)"
     },
     "lobby": {
         "mapRotation": "afterGame",
@@ -12,7 +12,7 @@ settings {
         "skirmish": {
             "enabledMaps": [
                 "horizonLunarColony",
-                "kingsRow",
+                /*"kingsRow",*/
                 "kingsRowWinter",
             ]
         },

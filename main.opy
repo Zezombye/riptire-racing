@@ -59,9 +59,9 @@ subroutine displayCredits
 #!define DEBUG_MODE false
 #!define generateRaycastChecks(positions) __script__("generateRaycastChecks.js")
 
-globalvar NB_ROUNDS = 4
+globalvar NB_ROUNDS = createWorkshopSetting(int<1:10>, "", "Number of rounds", 4, 1)
 #The time remaining has a 2.5 delay.
-globalvar TIME_REMAINING_ON_FINISH = 5
+globalvar TIME_REMAINING_ON_FINISH = createWorkshopSetting(float<0:1000>, "", "Time remaining when first player finishes", 10, 2)
 
 #!define participatingPlayers() ([p for p in getAllPlayers() if p.currentCheckpoint > 0])
 
@@ -85,13 +85,21 @@ _finishHud(sortedPlayersByScore()[nb] if displayFinalScores else playerInSpot(nb
 
 #!include "maps/horizon.opy"
 #!include "maps/kings_row.opy"
-
+/*
 rule "":
     winner = hostPlayer
     displayWinHuds = true
+*/
+
+rule "wrong map":
+    if getCurrentMap() not in [
+        Map.KINGS_ROW_WINTER,
+        Map.HORIZON_LUNAR_COLONY,
+    ] or getCurrentGamemode() != Gamemode.SKIRMISH:
+        hudHeader(getAllPlayers(), " \n\nThe map {} is not supported!\nSupported maps:\n- {}\n- {}".format(getCurrentMap(), Map.KINGS_ROW_WINTER, Map.HORIZON_LUNAR_COLONY), HudPosition.TOP, -99999, Color.RED, HudReeval.VISIBILITY_SORT_ORDER_AND_STRING, SpecVisibility.ALWAYS)
 
 def displayCredits():
-    hudSubtext(getAllPlayers(), "By Zezombye#9938 on Discord", HudPosition.LEFT, 0, Color.YELLOW, HudReeval.VISIBILITY_AND_STRING, SpecVisibility.DEFAULT)
+    hudSubtext(getAllPlayers(), "By Zezombye#9938 on Discord\ndiscord.io/zezombye", HudPosition.LEFT, 0, Color.YELLOW, HudReeval.VISIBILITY_AND_STRING, SpecVisibility.DEFAULT)
 
 rule "init global":
     displayCredits()
@@ -317,10 +325,10 @@ rule "player has finished":
         timeRemaining = TIME_REMAINING_ON_FINISH+2.5
         chase(timeRemaining, 0, rate=1, ChaseReeval.NONE)
 
-        /*if eventPlayer.couldNameBeGuessed:
+        if eventPlayer.couldNameBeGuessed:
             displayWinHuds = true
         else:
-            bigMessage(getAllPlayers(), "{} wins!".format(eventPlayer))*/
+            bigMessage(getAllPlayers(), "{} wins!".format(eventPlayer))
 
 rule "set game to finished":
     @Condition hasOnePlayerFinished

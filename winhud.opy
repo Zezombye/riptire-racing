@@ -159,7 +159,7 @@ rule "determine player name":
 rule "display win huds":
 
     winHud(b" \n\n\n\n\n\n\n\n\n", HudPosition.RIGHT, -600, HudReeval.VISIBILITY)
-    winHud( " \n\n\n\n\n\n\n\n", HudPosition.LEFT, -600, HudReeval.VISIBILITY)
+    winHud(" \n\n\n\n\n\n\n\n", HudPosition.LEFT, -600, HudReeval.VISIBILITY)
     winHud(" \n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n", HudPosition.TOP, -9999, HudReeval.VISIBILITY)
 
     #winHud(" \n\n\n\n\n\n\n\n\n\n", HudPosition.RIGHT, -590, HudReeval.VISIBILITY)
