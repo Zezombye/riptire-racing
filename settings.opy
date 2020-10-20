@@ -13,7 +13,7 @@ settings {
             "enabledMaps": [
                 "horizonLunarColony",
                 /*"kingsRow",*/
-                "kingsRowWinter",
+                /*"kingsRowWinter",*/
             ]
         },
         "general": {

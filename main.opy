@@ -1,6 +1,6 @@
 #!include "settings.opy"
 
-#!obfuscate
+#!obfuscate noRuleFilling noStringObfuscation noNameObfuscation
 
 globalvar positions
 globalvar spawnPositions
@@ -56,12 +56,12 @@ subroutine displayCredits
 #!define GAME_FINISHED 3
 
 #!define BUILD_MODE false
-#!define DEBUG_MODE false
+#!define DEBUG_MODE true
 #!define generateRaycastChecks(positions) __script__("generateRaycastChecks.js")
 
-globalvar NB_ROUNDS = createWorkshopSetting(int<1:10>, "", "Number of rounds", 4, 1)
+globalvar NB_ROUNDS = createWorkshopSetting(int<1:10>, "", "Number of rounds", 2, 1)
 #The time remaining has a 2.5 delay.
-globalvar TIME_REMAINING_ON_FINISH = createWorkshopSetting(float<0:1000>, "", "Time remaining when first player finishes", 10, 2)
+globalvar TIME_REMAINING_ON_FINISH = createWorkshopSetting(float<2.5:1000>, "", "Time remaining when first player finishes", 7.5, 2)
 
 #!define participatingPlayers() ([p for p in getAllPlayers() if p.currentCheckpoint > 0])
 
@@ -72,7 +72,7 @@ globalvar TIME_REMAINING_ON_FINISH = createWorkshopSetting(float<0:1000>, "", "T
 #!define spotHud(func, nb) \
 _spotHud(func, getAllPlayers().exclude(playerInSpot(nb)) if (nb) <= 2 else playerInSpot((nb)+1), nb, Color.ORANGE)\
 _spotHud(func, playerInSpot(nb), nb, Color.PURPLE)
-#!define _spotHud(func, visibility, nb, color) func((visibility) if gameStatus == GAME_STARTED else [], "#{} | {}".format(nb+1, playerInSpot(nb)), HudPosition.TOP, (nb)-100, color, HudReeval.VISIBILITY_SORT_ORDER_AND_STRING, SpecVisibility.DEFAULT)
+#!define _spotHud(func, visibility, nb, color) func((visibility) /*if gameStatus == GAME_STARTED else []*/, "#{} | {}".format(nb+1, playerInSpot(nb)), HudPosition.TOP, (nb)-100, color, HudReeval.VISIBILITY_SORT_ORDER_AND_STRING, SpecVisibility.DEFAULT)
 
 #!define finishHud(nb) \
 _finishHud(getAllPlayers().exclude(sortedPlayersByScore()[nb]) if displayFinalScores else getAllPlayers().exclude(playerInSpot(nb)), nb, Color.ORANGE)\
@@ -85,11 +85,6 @@ _finishHud(sortedPlayersByScore()[nb] if displayFinalScores else playerInSpot(nb
 
 #!include "maps/horizon.opy"
 #!include "maps/kings_row.opy"
-/*
-rule "":
-    winner = hostPlayer
-    displayWinHuds = true
-*/
 
 rule "wrong map":
     if getCurrentMap() not in [
@@ -105,7 +100,7 @@ rule "init global":
     displayCredits()
     #print(raycast(vect(-17.551, 6, -149.685), vect(-20.05, 6, -148.335), getAllPlayers(), [], true).getPlayerHit())
     #print(raycast(vect(-17.551, 6, -149.685), vect(-20.05, 6, -148.335), getAllPlayers(), [], true).getHitPosition())
-    hudHeader(hostPlayer if gameStatus == GAME_NOT_STARTED and not BUILD_MODE else [], "Press F to start the game", HudPosition.TOP, 1, Color.SKY_BLUE, HudReeval.VISIBILITY_SORT_ORDER_AND_STRING, SpecVisibility.DEFAULT)
+    hudHeader(hostPlayer if gameStatus == GAME_NOT_STARTED and not BUILD_MODE else [], "Press {} to start the game".format(buttonString(Button.INTERACT)), HudPosition.TOP, 1, Color.SKY_BLUE, HudReeval.VISIBILITY_SORT_ORDER_AND_STRING, SpecVisibility.DEFAULT)
     hudHeader(getAllPlayers().exclude(hostPlayer) if gameStatus == GAME_NOT_STARTED and not BUILD_MODE else [], "Waiting for host to start", HudPosition.TOP, 1, Color.SKY_BLUE, HudReeval.VISIBILITY_SORT_ORDER_AND_STRING, SpecVisibility.DEFAULT)
 
     #hide objective description
@@ -151,7 +146,7 @@ rule "init huds for game end":
     hudText(getAllPlayers() if gameStatus == GAME_FINISHED else [], " \n\n                                           \n\n\n\n\n\n\n\n\n\n\n\n\n", "                          ", null, HudPosition.RIGHT, -50, Color.BLUE, Color.WHITE, Color.WHITE, HudReeval.VISIBILITY, SpecVisibility.DEFAULT)
 
     #remaining time hud
-    hudSubtext(getAllPlayers() if timeRemaining > 0 and timeRemaining <= TIME_REMAINING_ON_FINISH and gameStatus == GAME_STARTED else [], " \n\n\n\n\n\nGame ends in {} second{}".format(ceil(timeRemaining), "" if timeRemaining <= 1 else "s"), HudPosition.TOP, -10, Color.RED, HudReeval.VISIBILITY_AND_STRING, SpecVisibility.DEFAULT)
+    hudSubtext(getAllPlayers() if timeRemaining > 0 and timeRemaining <= TIME_REMAINING_ON_FINISH - 2.5 and gameStatus == GAME_STARTED else [], " \n\n\n\n\n\nGame ends in {} second{}".format(ceil(timeRemaining), "" if timeRemaining <= 1 else "s"), HudPosition.TOP, -10, Color.RED, HudReeval.VISIBILITY_AND_STRING, SpecVisibility.DEFAULT)
 
 
 rule "init player":
@@ -322,13 +317,9 @@ rule "player has finished":
     if not hasOnePlayerFinished:
         bigMessage(getAllPlayers(), "{} wins this round!".format(eventPlayer))
         hasOnePlayerFinished = true
-        timeRemaining = TIME_REMAINING_ON_FINISH+2.5
+        timeRemaining = TIME_REMAINING_ON_FINISH
         chase(timeRemaining, 0, rate=1, ChaseReeval.NONE)
 
-        if eventPlayer.couldNameBeGuessed:
-            displayWinHuds = true
-        else:
-            bigMessage(getAllPlayers(), "{} wins!".format(eventPlayer))
 
 rule "set game to finished":
     @Condition hasOnePlayerFinished
