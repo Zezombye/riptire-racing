@@ -1,6 +1,6 @@
 # Riptire Racing
 
-Old gamemode which I updated a little for the Elo Hell throwdown.
+Old gamemode which I updated a little for the Elo Hell throwdown. Made with [overpy](https://github.com/Zezombye/overpy).
 
 I won't work on it anymore, feel free to fork it and add new maps. Obviously don't steal the credit though.
 
