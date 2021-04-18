@@ -13,7 +13,7 @@ settings {
     "gamemodes": {
         "hybrid": {
             "enabledMaps": [
-                /*"horizonLunarColony",*/
+                "horizonLunarColony",
                 "kingsRowWinter",
             ]
         },
