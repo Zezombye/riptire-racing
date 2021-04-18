@@ -1,6 +1,6 @@
 #!include "settings.opy"
 
-#!obfuscate noRuleFilling noStringObfuscation noNameObfuscation
+##!obfuscate noRuleFilling noStringObfuscation noNameObfuscation
 
 globalvar positions
 globalvar spawnPositions
@@ -47,6 +47,7 @@ playervar currentCheckpoint
 playervar hasLaunchedTire
 playervar hasFinished
 playervar score
+playervar isPlayer = true #detect specs
 
 subroutine displayCredits
 
@@ -56,12 +57,12 @@ subroutine displayCredits
 #!define GAME_FINISHED 3
 
 #!define BUILD_MODE false
-#!define DEBUG_MODE true
+#!define DEBUG_MODE false
 #!define generateRaycastChecks(positions) __script__("generateRaycastChecks.js")
 
-globalvar NB_ROUNDS = createWorkshopSetting(int<1:10>, "", "Number of rounds", 2, 1)
+globalvar NB_ROUNDS = createWorkshopSetting(int<1:10>, "", "Number of rounds", 10, 1)
 #The time remaining has a 2.5 delay.
-globalvar TIME_REMAINING_ON_FINISH = createWorkshopSetting(float<2.5:1000>, "", "Time remaining when first player finishes", 7.5, 2)
+globalvar TIME_REMAINING_ON_FINISH = createWorkshopSetting(float<2.5:1000>, "", "Time remaining when first player finishes", 15, 2)
 
 #!define participatingPlayers() ([p for p in getAllPlayers() if p.currentCheckpoint > 0])
 
@@ -72,7 +73,7 @@ globalvar TIME_REMAINING_ON_FINISH = createWorkshopSetting(float<2.5:1000>, "", 
 #!define spotHud(func, nb) \
 _spotHud(func, getAllPlayers().exclude(playerInSpot(nb)) if (nb) <= 2 else playerInSpot((nb)+1), nb, Color.ORANGE)\
 _spotHud(func, playerInSpot(nb), nb, Color.PURPLE)
-#!define _spotHud(func, visibility, nb, color) func((visibility) /*if gameStatus == GAME_STARTED else []*/, "#{} | {}".format(nb+1, playerInSpot(nb)), HudPosition.TOP, (nb)-100, color, HudReeval.VISIBILITY_SORT_ORDER_AND_STRING, SpecVisibility.DEFAULT)
+#!define _spotHud(func, visibility, nb, color) func((visibility) if gameStatus == GAME_STARTED else [], "#{} | {}".format(nb+1, playerInSpot(nb)), HudPosition.TOP, (nb)-100, color, HudReeval.VISIBILITY_SORT_ORDER_AND_STRING, SpecVisibility.DEFAULT)
 
 #!define finishHud(nb) \
 _finishHud(getAllPlayers().exclude(sortedPlayersByScore()[nb]) if displayFinalScores else getAllPlayers().exclude(playerInSpot(nb)), nb, Color.ORANGE)\
@@ -90,17 +91,25 @@ rule "wrong map":
     if getCurrentMap() not in [
         Map.KINGS_ROW_WINTER,
         Map.HORIZON_LUNAR_COLONY,
-    ] or getCurrentGamemode() != Gamemode.SKIRMISH:
+    ]/* or getCurrentGamemode() != Gamemode.SKIRMISH*/:
         hudHeader(getAllPlayers(), " \n\nThe map {} is not supported!\nSupported maps:\n- {}\n- {}".format(getCurrentMap(), Map.KINGS_ROW_WINTER, Map.HORIZON_LUNAR_COLONY), HudPosition.TOP, -99999, Color.RED, HudReeval.VISIBILITY_SORT_ORDER_AND_STRING, SpecVisibility.ALWAYS)
 
 def displayCredits():
-    hudSubtext(getAllPlayers(), "By Zezombye#9938 on Discord\ndiscord.io/zezombye", HudPosition.LEFT, 0, Color.YELLOW, HudReeval.VISIBILITY_AND_STRING, SpecVisibility.DEFAULT)
+    hudSubtext(getAllPlayers(), "By Zezombye#9938 on Discord\ncode: GGFYC", HudPosition.LEFT, 0, Color.YELLOW, HudReeval.VISIBILITY_AND_STRING, SpecVisibility.DEFAULT)
+
+rule "assembling heroes":
+    @Condition isAssemblingHeroes()
+    setMatchTime(1)
+
+rule "game in actual setup":
+    @Condition isInSetup()
+    setMatchTime(9999999)
 
 rule "init global":
     displayCredits()
     #print(raycast(vect(-17.551, 6, -149.685), vect(-20.05, 6, -148.335), getAllPlayers(), [], true).getPlayerHit())
     #print(raycast(vect(-17.551, 6, -149.685), vect(-20.05, 6, -148.335), getAllPlayers(), [], true).getHitPosition())
-    hudHeader(hostPlayer if gameStatus == GAME_NOT_STARTED and not BUILD_MODE else [], "Press {} to start the game".format(buttonString(Button.INTERACT)), HudPosition.TOP, 1, Color.SKY_BLUE, HudReeval.VISIBILITY_SORT_ORDER_AND_STRING, SpecVisibility.DEFAULT)
+    hudHeader(hostPlayer if gameStatus == GAME_NOT_STARTED and not BUILD_MODE else [], "Press {} to start the game".format(buttonString(Button.INTERACT)) if localPlayer.isPlayer else "Press Move Up / E to start the game", HudPosition.TOP, 1, Color.SKY_BLUE, HudReeval.VISIBILITY_SORT_ORDER_AND_STRING, SpecVisibility.DEFAULT)
     hudHeader(getAllPlayers().exclude(hostPlayer) if gameStatus == GAME_NOT_STARTED and not BUILD_MODE else [], "Waiting for host to start", HudPosition.TOP, 1, Color.SKY_BLUE, HudReeval.VISIBILITY_SORT_ORDER_AND_STRING, SpecVisibility.DEFAULT)
 
     #hide objective description
@@ -126,7 +135,11 @@ rule "init global":
 rule "init huds for game end":
     
     hudSubtext(getAllPlayers() if gameStatus == GAME_FINISHED else [], " \n\n\n\n\n\n\n\n", HudPosition.TOP, -750, Color.WHITE, HudReeval.VISIBILITY, SpecVisibility.DEFAULT)
-    hudHeader(getAllPlayers() if gameStatus == GAME_FINISHED else [], "Final Rankings" if displayFinalScores else "Place for this round", HudPosition.TOP, -740, Color.SKY_BLUE, HudReeval.VISIBILITY_AND_STRING, SpecVisibility.DEFAULT)
+    hudHeader(getAllPlayers() if gameStatus == GAME_FINISHED else [], "Final Rankings" if displayFinalScores and currentRound >= NB_ROUNDS-1 else "Rankings so far" if displayFinalScores else "Place for this round", HudPosition.TOP, -740, rgb(
+        128 + 127 * cosDeg(getTotalTimeElapsed() * 100),
+        128 + 127 * cosDeg((getTotalTimeElapsed() * 100) + 120),
+        128 + 127 * cosDeg((getTotalTimeElapsed() * 100) + 240)
+    ) if displayFinalScores and currentRound >= NB_ROUNDS-1 else Color.SKY_BLUE, HudReeval.VISIBILITY_STRING_AND_COLOR, SpecVisibility.DEFAULT)
     hudSubtext(getAllPlayers() if gameStatus == GAME_FINISHED else [], " \n", HudPosition.TOP, -730, Color.WHITE, HudReeval.VISIBILITY, SpecVisibility.DEFAULT)
     finishHud(0)
     finishHud(1)
@@ -143,7 +156,11 @@ rule "init huds for game end":
 
     #black background for finish huds
     hudSubtext(getAllPlayers() if gameStatus == GAME_FINISHED else [], " \n\n\n\n\n\n\n", HudPosition.RIGHT, -75, Color.WHITE, HudReeval.VISIBILITY, SpecVisibility.DEFAULT)
-    hudText(getAllPlayers() if gameStatus == GAME_FINISHED else [], " \n\n                                           \n\n\n\n\n\n\n\n\n\n\n\n\n", "                          ", null, HudPosition.RIGHT, -50, Color.BLUE, Color.WHITE, Color.WHITE, HudReeval.VISIBILITY, SpecVisibility.DEFAULT)
+    hudText(getAllPlayers() if gameStatus == GAME_FINISHED else [], " \n\n                                           \n\n\n\n\n\n\n\n\n\n\n\n\n", "                          ", null, HudPosition.RIGHT, -50, rgb(
+        128 + 127 * cosDeg(getTotalTimeElapsed() * 100),
+        128 + 127 * cosDeg((getTotalTimeElapsed() * 100) + 120),
+        128 + 127 * cosDeg((getTotalTimeElapsed() * 100) + 240)
+    ) if displayFinalScores and currentRound >= NB_ROUNDS-1 else Color.BLUE, Color.WHITE, Color.WHITE, HudReeval.VISIBILITY_AND_COLOR, SpecVisibility.DEFAULT)
 
     #remaining time hud
     hudSubtext(getAllPlayers() if timeRemaining > 0 and timeRemaining <= TIME_REMAINING_ON_FINISH - 2.5 and gameStatus == GAME_STARTED else [], " \n\n\n\n\n\nGame ends in {} second{}".format(ceil(timeRemaining), "" if timeRemaining <= 1 else "s"), HudPosition.TOP, -10, Color.RED, HudReeval.VISIBILITY_AND_STRING, SpecVisibility.DEFAULT)
@@ -168,6 +185,10 @@ rule "init player":
         eventPlayer.setAbility2Enabled(false)
         eventPlayer.setUltEnabled(false)
 
+    eventPlayer.disableGamemodeHud()
+    eventPlayer.disableMessages()
+    eventPlayer.disableGamemodeInWorldUi()
+
 rule "player died in setup":
     @Event playerDied
     @Condition gameStatus == GAME_NOT_STARTED
@@ -179,6 +200,7 @@ rule "host player starts the game":
     @Condition not BUILD_MODE
     gameStatus = GAME_IN_SETUP
 
+
 rule "init player - setup":
     @Event eachPlayer
     @Condition gameStatus == GAME_IN_SETUP
@@ -186,8 +208,10 @@ rule "init player - setup":
     eventPlayer.hasLaunchedTire = false
     eventPlayer.hasFinished = false
     eventPlayer.setStatusEffect(null, Status.ROOTED, 9999)
-    eventPlayer.teleport(spawnPositions[0] + directionTowards(spawnPositions[0], spawnPositions[1])*eventPlayer.getSlot()*(distance(spawnPositions[0], spawnPositions[1])/6) + (vect(0,2,0) if eventPlayer.getTeam() == Team.2 else vect(0,0,0)))
-    eventPlayer.startForcingPosition(spawnPositions[0] + directionTowards(spawnPositions[0], spawnPositions[1])*eventPlayer.getSlot()*(distance(spawnPositions[0], spawnPositions[1])/6) + (vect(0,2,0) if eventPlayer.getTeam() == Team.2 else vect(0,0,0)), false)
+    #eventPlayer.teleport(spawnPositions[0] + directionTowards(spawnPositions[0], spawnPositions[1])*eventPlayer.getSlot()*(distance(spawnPositions[0], spawnPositions[1])/6) + (vect(0,2,0) if eventPlayer.getTeam() == Team.2 else vect(0,0,0)))
+    eventPlayer.teleport((spawnPositions[0] + spawnPositions[1]) /2)
+    #eventPlayer.startForcingPosition(spawnPositions[0] + directionTowards(spawnPositions[0], spawnPositions[1])*eventPlayer.getSlot()*(distance(spawnPositions[0], spawnPositions[1])/6) + (vect(0,2,0) if eventPlayer.getTeam() == Team.2 else vect(0,0,0)), false)
+    eventPlayer.startForcingPosition((spawnPositions[0] + spawnPositions[1]) /2, false)
     eventPlayer.resurrect()
     eventPlayer.setFacing(directionTowards(eventPlayer.getEyePosition(), (positions[0]+positions[1])/2), Relativity.TO_WORLD)
     
@@ -201,7 +225,7 @@ rule "init player - setup":
 
 rule "setup":
     @Condition gameStatus == GAME_IN_SETUP
-    bigMessage(getAllPlayers(), "Round {}/3".format(currentRound+1))
+    bigMessage(getAllPlayers(), "Round {}/{}".format(currentRound+1, NB_ROUNDS))
     stopChasingVariable(timeRemaining)
     hasOnePlayerFinished = false
     displayFinalScores = false
@@ -271,8 +295,8 @@ rule "raycast check for next checkpoint":
     @Event eachPlayer
     @Condition gameStatus == GAME_STARTED
     @Condition distance(positions[eventPlayer.currentCheckpoint*2+1], raycast(positions[eventPlayer.currentCheckpoint*2], positions[eventPlayer.currentCheckpoint*2+1], eventPlayer, [], true).getHitPosition()) > 0.1
+    playEffect(eventPlayer, DynamicEffect.BUFF_EXPLOSION_SOUND, Color.WHITE, raycast(positions[eventPlayer.currentCheckpoint*2], positions[eventPlayer.currentCheckpoint*2+1], eventPlayer, [], true).getHitPosition(), 99999)
     eventPlayer.currentCheckpoint = round(eventPlayer.currentCheckpoint+1)
-    playEffect(eventPlayer, DynamicEffect.BUFF_EXPLOSION_SOUND, Color.WHITE, eventPlayer, 99999)
     smallMessage(eventPlayer, "{}/{}".format(floor(eventPlayer.currentCheckpoint), len(positions)/2))
 
 rule "player launched tire":
@@ -310,7 +334,7 @@ rule "player finishes":
 rule "player has finished":
     @Event eachPlayer
     @Condition eventPlayer.hasFinished
-    eventPlayer.forceButtonPress(ButtonLiteral.PRIMARY_FIRE)
+    eventPlayer.forceButtonPress(Button.PRIMARY_FIRE)
     eventPlayer.setUltCharge(0)
     eventPlayer.clearStatusEffect(Status.ROOTED)
 
@@ -335,6 +359,7 @@ rule "set game to finished":
         gameStatus = GAME_IN_SETUP
         currentRound++
     else:
+        wait(3)
         winner = sortedPlayersByScore()[0]
         hudSubtext(getAllPlayers(), " \n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n", HudPosition.TOP, -9999, Color.WHITE, HudReeval.VISIBILITY, SpecVisibility.DEFAULT)
         hudSubtext(getAllPlayers(), " \n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n", HudPosition.LEFT, -400, Color.WHITE, HudReeval.VISIBILITY, SpecVisibility.DEFAULT)
@@ -354,7 +379,7 @@ rule "set game to finished":
         winner.communicate(Comms.EMOTE_UP)
         winner.communicate(Comms.VOICE_LINE_UP)
         wait(10)
-        setMatchTime(0)
+        declareTeamVictory(Team.1)
 
 
 rule "increase player scores":

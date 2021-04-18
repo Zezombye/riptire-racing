@@ -2,25 +2,27 @@
 
 settings {
     "main": {
-        "description": "Zez's Rip-Tire Racing | https://discord.io/zezombye | BETA version but still playable :)"
+        "description": "Zez's Rip-Tire Racing | BETA version but still playable :)"
     },
     "lobby": {
         "mapRotation": "afterGame",
-        "returnToLobby": "never"
+        "returnToLobby": "never",
+        "team1Slots": 12,
+        "team2Slots": 0,
     },
     "gamemodes": {
-        "skirmish": {
+        "hybrid": {
             "enabledMaps": [
-                "horizonLunarColony",
-                /*"kingsRow",*/
-                /*"kingsRowWinter",*/
+                /*"horizonLunarColony",*/
+                "kingsRowWinter",
             ]
         },
         "general": {
             "heroLimit": "off",
             "roleLimit": "off",
-            "enableRandomHeroes": true,
-            "respawnTime%": 30
+            "enableRandomHeroes": false,
+            "respawnTime%": 30,
+            "gamemodeStartTrigger": "immediately",
         }
     },
     "heroes": {

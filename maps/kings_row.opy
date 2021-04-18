@@ -1,7 +1,7 @@
 #!mainFile "../main.opy"
 
 rule "kings row":
-    @Condition /*getCurrentMap() == Map.KINGS_ROW or */getCurrentMap() == Map.KINGS_ROW_WINTER
+    @Condition getCurrentMap() == Map.KINGS_ROW_WINTER
     
     positions = [
         vect(11.683, -0.496, -82.772), vect(1.806, -0.509, -84.611),
