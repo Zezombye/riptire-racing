@@ -3,9 +3,9 @@
 rule "init debug":
     @Condition DEBUG_MODE
 
-    for I in range(12):
+    for I in range(6):
         createDummy(Hero.JUNKRAT, Team.1, -1, positions[0], vect(0,0,0))
-        #createDummy(Hero.JUNKRAT, Team.2, -1, positions[0], vect(0,0,0))
+        createDummy(Hero.JUNKRAT, Team.2, -1, positions[0], vect(0,0,0))
 
 rule "debug game finished":
     @Condition hostPlayer.isHoldingButton(Button.MELEE)

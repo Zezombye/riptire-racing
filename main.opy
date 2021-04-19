@@ -188,6 +188,8 @@ rule "init player":
     eventPlayer.disableGamemodeHud()
     eventPlayer.disableMessages()
     eventPlayer.disableGamemodeInWorldUi()
+    eventPlayer.setKnockbackReceived(0)
+    eventPlayer.setKnockbackDealt(0)
 
 rule "player died in setup":
     @Event playerDied
@@ -208,10 +210,10 @@ rule "init player - setup":
     eventPlayer.hasLaunchedTire = false
     eventPlayer.hasFinished = false
     eventPlayer.setStatusEffect(null, Status.ROOTED, 9999)
-    #eventPlayer.teleport(spawnPositions[0] + directionTowards(spawnPositions[0], spawnPositions[1])*eventPlayer.getSlot()*(distance(spawnPositions[0], spawnPositions[1])/6) + (vect(0,2,0) if eventPlayer.getTeam() == Team.2 else vect(0,0,0)))
-    eventPlayer.teleport((spawnPositions[0] + spawnPositions[1]) /2)
-    #eventPlayer.startForcingPosition(spawnPositions[0] + directionTowards(spawnPositions[0], spawnPositions[1])*eventPlayer.getSlot()*(distance(spawnPositions[0], spawnPositions[1])/6) + (vect(0,2,0) if eventPlayer.getTeam() == Team.2 else vect(0,0,0)), false)
-    eventPlayer.startForcingPosition((spawnPositions[0] + spawnPositions[1]) /2, false)
+    eventPlayer.teleport(spawnPositions[0] + directionTowards(spawnPositions[0], spawnPositions[1])*eventPlayer.getSlot()*(distance(spawnPositions[0], spawnPositions[1])/6) + (vect(0,2,0) if eventPlayer.getTeam() == Team.2 else vect(0,0,0)))
+    #eventPlayer.teleport((spawnPositions[0] + spawnPositions[1]) /2)
+    eventPlayer.startForcingPosition(spawnPositions[0] + directionTowards(spawnPositions[0], spawnPositions[1])*eventPlayer.getSlot()*(distance(spawnPositions[0], spawnPositions[1])/6) + (vect(0,2,0) if eventPlayer.getTeam() == Team.2 else vect(0,0,0)), false)
+    #eventPlayer.startForcingPosition((spawnPositions[0] + spawnPositions[1]) /2, false)
     eventPlayer.resurrect()
     eventPlayer.setFacing(directionTowards(eventPlayer.getEyePosition(), (positions[0]+positions[1])/2), Relativity.TO_WORLD)
     

@@ -2,16 +2,16 @@
 
 settings {
     "main": {
-        "description": "Zez's Rip-Tire Racing | BETA version but still playable :)"
+        "description": "Zez's Rip-Tire Racing | BETA version but still playable :) | workshop.codes/GGFYC"
     },
     "lobby": {
         "mapRotation": "afterGame",
         "returnToLobby": "never",
-        "team1Slots": 12,
-        "team2Slots": 0,
+        "team1Slots": 6,
+        "team2Slots": 6,
     },
     "gamemodes": {
-        "hybrid": {
+        "skirmish": {
             "enabledMaps": [
                 "horizonLunarColony",
                 "kingsRowWinter",
